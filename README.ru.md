@@ -18,9 +18,11 @@
 > Инструкция актуальна для Debian-based дистрибутивов Linux. Тестирование проводились в основном с клиентом sing-box Hiddify
 
 ### Сертификат
+
 Сервис подразумевает обязательное наличие SSL сертификата, поэтому сначала необходимо его получить. Для этого потребуется привязать домен к IP целевого сервера.
 
 После получения домена выполните следующие команды (80 или 443 порты должны быть открыты):
+
 ```bash
 sudo apt update && sudo apt upgrade -y
 sudo apt install certbot
@@ -31,6 +33,7 @@ sudo certbot certonly --standalone -d <domain> --register-unsafely-without-email
 Ключи будут лежать в директории "/etc/letsencrypt/live/<domain>/"
 
 ### Подписки
+
 Если вы собираетесь использовать не только прямые ссылки на конфигурации (`vless://`), но и "подписочные" ссылки, то в каждой панели 3x-ui нужно настроить функцию подписки.  
 Для клиентов, подписки которых вы хотите объединить, требуется установить одинаковый **subscription ID**.
 
@@ -39,12 +42,14 @@ sudo certbot certonly --standalone -d <domain> --register-unsafely-without-email
 ![Сервер 2](https://i.ibb.co/sSn9byZ/2025-03-18-153330.png)
 
 ### Файл с конфигами
+
 Чтобы всё заработало, также необходимо создать и разместить на GitHub или локально текстовый файл со списком всех конфигураций.
 
 Как уже упоминалось, поддерживаются два вида ссылок: подписки и прямые. Прямые вставляются как есть.  
 Для подписок нужно удалить subscription ID из URL. То есть от `https://<domain>:<port>/<url>/<subscription_id>` должно остаться только `https://<domain>:<port>/<url>/` (обратите внимание на наличие конечного слэша).
 
 Пример:
+
 ```txt
 https://subscription_link_example:1/imy/
 https://subscription_link_example:2/sub/
@@ -54,9 +59,11 @@ vless://...
 ```
 
 ---
+
 ## Установка и настройка
 
 Скачайте и установите необходимые инструменты:
+
 ```bash
 sudo apt update && sudo apt upgrade -y
 sudo apt install git curl
@@ -66,6 +73,7 @@ sudo sh get-docker.sh
 ```
 
 Скачайте репозиторий и перейдите в него:
+
 ```bash
 git clone https://github.com/NoisyCake/vless_config_aggregator.git
 cd vless_config_aggregator
@@ -73,12 +81,14 @@ cp .env.example .env
 ```
 
 ### Переменные окружения
+
 В файле `.env` содержится несколько переменных, которые нужно настроить:
+
 |variable|description|example|
 |:--:|:--|:--|
 |LOCAL_MODE|Если включено, ищет файл на хосте. Иначе пытается достать из удалённого репозитория|on|
 |FILE_PATH|Абсолютный путь к `.txt` файлу конфигураций|/path/to/configs.txt|
-|CONFIG_URL|Ссылка на `.txt` файл конфигураций|https://api.github.com/.../file.txt|
+|CONFIG_URL|Ссылка на `.txt` файл конфигураций|<https://api.github.com/.../file.txt>|
 |GITHUB_TOKEN|Токен доступа GitHub (если файл находится в приватном репозитории)|ghp_dhoauigc7898374yduisdhSDHFHGf7|
 |SUB_NAME|Имя подписки, которое будет отображаться в клиенте. Если не указано, им станет subscription ID из 3x-ui|HFK|
 |SERVER_NAME|Доменное имя сервера, на котором установлен сервис|domain.or.subdomain|
@@ -87,6 +97,7 @@ cp .env.example .env
 |CERT_PATH|Абсолютный путь к SSL-сертификату|/etc/letsencrypt/live/domain.or.subdomain|
 
 ---
+
 ## Docker
 
 Приложение запускается в одном Docker контейнере, объединяющем App и Nginx.
@@ -94,21 +105,25 @@ cp .env.example .env
 ### Быстрый старт
 
 1. **Настройте переменные окружения:**
+
    ```bash
    nano .env  # Отредактируйте файл
    ```
 
 2. **Получите SSL сертификаты** (если не используется LOCAL_MODE):
+
    ```bash
    sudo certbot certonly --standalone -d your-domain.com
    ```
 
 3. **Запустите сервис:**
+
    ```bash
    sudo docker compose up -d
    ```
 
 4. **Просмотрите логи:**
+
    ```bash
    docker compose logs -f
    ```
@@ -116,13 +131,14 @@ cp .env.example .env
 ### Доступ к сервису
 
 Итоговая ссылка на подписку зависит от вашей конфигурации:
+
 - Только прямые ссылки: `https://{SERVER_NAME}:{PORT}/{URL}/{SUB_NAME}`
 - С подписками: `https://{SERVER_NAME}:{PORT}/{URL}/subscription_id/{SUB_NAME}`
 
 В обоих случаях часть /{SUB_NAME} не нужна, если переменная пуста.
 
 ---
+
 ## Лицензия
 
 Проект распространяется под лицензией MIT. Подробности в файле `LICENSE`.
-

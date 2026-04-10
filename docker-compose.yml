@@ -1,23 +1,18 @@
 services:
-  app:
-    build:
-      context: .
-      dockerfile: docker/Dockerfile
-    env_file:
-      - .env
+  xray_config_aggregator:
     ports:
-      - "${PORT}:${PORT}"
+      - "80:80"
     environment:
-      - LOCAL_MODE=${LOCAL_MODE}
-      - FILE_PATH=${FILE_PATH}
-      - CONFIG_URL=${CONFIG_URL}
+      - LOCAL_MODE=on/off
+      - FILE_PATH=config.txt
+      - CONFIG_URL=https://api.github.com/.../file.txt
       - GITHUB_TOKEN=${GITHUB_TOKEN}
-      - SERVER_NAME=${SERVER_NAME}
-      - URL=${URL}
-      - PORT=${PORT}
+      - SERVER_NAME=example.com
+      - URL=/sub
+      - PORT=8080
       - SUB_NAME=${SUB_NAME}
     volumes:
-      - ${FILE_PATH}:/app/configs.txt
+      - ${FILE_PATH}:/app/config.txt
       - ${CERT_PATH}/fullchain.pem:/etc/nginx/ssl/fullchain.pem:ro
       - ${CERT_PATH}/privkey.pem:/etc/nginx/ssl/privkey.pem:ro
     restart: unless-stopped
