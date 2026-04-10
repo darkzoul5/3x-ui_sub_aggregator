@@ -1,8 +1,8 @@
 <div align="center" markdown>
 
 <p align="center">
-    <a href="https://github.com/NoisyCake/3x-ui_subscriptions_aggregator/blob/main/README.md"><u><b>ENGLISH</b></u></a> •
-    <a href="https://github.com/NoisyCake/3x-ui_subscriptions_aggregator/blob/main/README.ru.md"><u><b>РУССКИЙ</b></u></a>
+    <a href="https://github.com/darkzoul5/xray_config_aggregator/blob/main/README.md"><u><b>ENGLISH</b></u></a> •
+    <a href="https://github.com/darkzoul5/xray_config_aggregator/blob/main/README.ru.md"><u><b>РУССКИЙ</b></u></a>
 </p>
 
 # vless_config_aggregator
@@ -69,7 +69,7 @@ sudo sh get-docker.sh
 ```bash
 git clone https://github.com/NoisyCake/vless_config_aggregator.git
 cd vless_config_aggregator
-cp .env.template .env
+cp .env.example .env
 ```
 
 ### Переменные окружения
@@ -87,23 +87,42 @@ cp .env.template .env
 |CERT_PATH|Абсолютный путь к SSL-сертификату|/etc/letsencrypt/live/domain.or.subdomain|
 
 ---
-## Запуск
+## Docker
 
-Запуск производится командой `sudo docker compose up --build -d`.
+Приложение запускается в одном Docker контейнере, объединяющем App и Nginx.
 
-Общая ссылка на объединение конфигов может выглядеть по-разному:
-1. Если в `.txt` нет подписочных ссылок или их не требуется использовать: `https://{SERVER_NAME}:{PORT}/{URL}/{SUB_NAME}`;
-2. Иначе, ожидаемое будет находиться по адресу `https://{SERVER_NAME}:{PORT}/{URL}/subscription_id/{SUB_NAME}`, где subscription_id — имя подписки на 3x-ui серверах.
+### Быстрый старт
 
-В обоих случаях часть `/{SUB_NAME}`, очевидно, не нужна, если переменная пуста.
+1. **Настройте переменные окружения:**
+   ```bash
+   nano .env  # Отредактируйте файл
+   ```
+
+2. **Получите SSL сертификаты** (если не используется LOCAL_MODE):
+   ```bash
+   sudo certbot certonly --standalone -d your-domain.com
+   ```
+
+3. **Запустите сервис:**
+   ```bash
+   sudo docker compose up -d
+   ```
+
+4. **Просмотрите логи:**
+   ```bash
+   docker compose logs -f
+   ```
+
+### Доступ к сервису
+
+Итоговая ссылка на подписку зависит от вашей конфигурации:
+- Только прямые ссылки: `https://{SERVER_NAME}:{PORT}/{URL}/{SUB_NAME}`
+- С подписками: `https://{SERVER_NAME}:{PORT}/{URL}/subscription_id/{SUB_NAME}`
+
+В обоих случаях часть /{SUB_NAME} не нужна, если переменная пуста.
 
 ---
 ## Лицензия
 
 Проект распространяется под лицензией MIT. Подробности в файле `LICENSE`.
 
----
-## Изменения и предложения
-
-Вы можете отслеживать изменения версий на странице Релизов.
-Предложения, сообщения об ошибках и pull requests приветствуются!
