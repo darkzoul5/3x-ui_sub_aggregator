@@ -1,7 +1,7 @@
 services:
   xray_config_aggregator:
     ports:
-      - "80:80"
+      - "80:80" #ngnix
     environment:
       - LOCAL_MODE=on/off
       - FILE_PATH=config.txt
@@ -9,7 +9,6 @@ services:
       - GITHUB_TOKEN=${GITHUB_TOKEN}
       - SERVER_NAME=example.com
       - URL=/sub
-      - PORT=8080
       - SUB_NAME="unified links"
     volumes:
       - ${FILE_PATH}:/app/config.txt

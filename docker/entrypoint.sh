@@ -3,7 +3,7 @@ set -e
 
 # Set defaults if variables not provided
 export SERVER_NAME=${SERVER_NAME:-localhost}
-export PORT=${PORT:-8080}
+export PORT=${PORT:-80}
 export URL=${URL:-sub}
 export SUB_NAME=${SUB_NAME:-unified links}
 export LOCAL_MODE=${LOCAL_MODE:-on}
