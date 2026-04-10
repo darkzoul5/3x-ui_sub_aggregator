@@ -2,7 +2,7 @@
 set -e
 
 # Set defaults if variables not provided
-export PORT=${PORT:-80}
+export PORT=${PORT:-8000}
 export URL=${URL:-sub}
 export SUB_NAME=${SUB_NAME:-unified links}
 export LOCAL_MODE=${LOCAL_MODE:-on}
