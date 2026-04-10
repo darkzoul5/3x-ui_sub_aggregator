@@ -1,13 +1,13 @@
 <div align="center" markdown>
 
 <p align="center">
-    <a href="https://github.com/NoisyCake/3x-ui_subscriptions_aggregator/blob/main/README.md"><u><b>ENGLISH</b></u></a> •
-    <a href="https://github.com/NoisyCake/3x-ui_subscriptions_aggregator/blob/main/README.ru.md"><u><b>РУССКИЙ</b></u></a>
+    <a href="https://github.com/darkzoul5/xray_config_aggregator/blob/main/README.md"><u><b>ENG</b></u></a> •
+    <a href="https://github.com/darkzoul5/xray_config_aggregator/blob/main/README.ru.md"><u><b>Рус</b></u></a>
 </p>
 
 # vless_config_aggregator
 
-A reverse proxy that aggregates multiple VLESS configurations from various services into a single unified subscription link.
+A reverse proxy that aggregates multiple VLESS configurations from various 3x-ui servers into a unified subscription link.
 </div>
 
 ## Prepare
@@ -68,7 +68,7 @@ Download repo:
 ```bash
 git clone https://github.com/NoisyCake/vless_config_aggregator.git
 cd vless_config_aggregator
-cp .env.template .env
+cp .env.example .env
 ```
 
 ### Environment variables
@@ -86,23 +86,41 @@ Edit the `.env` file with your own values:
 |CERT_PATH|Absolute path to your SSL certificate directory|/etc/letsencrypt/live/domain.or.subdomain|
 
 ---
-## Running the Service
+## Docker Setup
 
-Start everything via Docker: `sudo docker compose up --build -d`.
+The application runs in a single Docker container combining FastAPI and Nginx. For detailed Docker configuration, build instructions, and troubleshooting, see [DOCKER_SETUP.md](DOCKER_SETUP.md).
 
-The final aggregated link will depend on the contents of your config file and your purposes:
-1. If there are only direct links or subscription links aren’t needed: `https://{SERVER_NAME}:{PORT}/{URL}/{SUB_NAME}`;
-2. If subscriptions are used: `https://{SERVER_NAME}:{PORT}/{URL}/subscription_id/{SUB_NAME}`.
+### Quick Start
 
-In both cases, the `/{SUB_NAME}` part is obviously unnecessary if the variable is empty.
+1. **Configure environment:**
+   ```bash
+   nano .env  # Edit with your values
+   ```
+
+2. **Get SSL certificates** (if not using LOCAL_MODE):
+   ```bash
+   sudo certbot certonly --standalone -d your-domain.com
+   ```
+
+3. **Run the service:**
+   ```bash
+   sudo docker compose up -d
+   ```
+
+4. **View logs:**
+   ```bash
+   docker compose logs -f
+   ```
+
+### Access the service
+
+The final aggregated link depends on your config:
+- Direct links only: `https://{SERVER_NAME}:{PORT}/{URL}/{SUB_NAME}`
+- With subscriptions: `https://{SERVER_NAME}:{PORT}/{URL}/subscription_id/{SUB_NAME}`
+
+(Omit `/{SUB_NAME}` if the variable is empty)
 
 ---
 ## License
 
 MIT licensed — see LICENSE for details.
-
----
-## Changelog & Feedback
-
-You can track version changes on the Releases page.
-Suggestions, bug reports, and pull requests are welcome!
