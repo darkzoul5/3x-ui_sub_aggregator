@@ -8,9 +8,8 @@ services:
       - CONFIG_URL=https://api.github.com/.../file.txt
       - GITHUB_TOKEN=${GITHUB_TOKEN}
       - URL=/sub
-      - SUB_NAME="unified links"
     volumes:
-      - ${FILE_PATH}:/app/config.txt
+      - /path/to/config.txt:/app/config.txt
     restart: unless-stopped
 
 networks:
