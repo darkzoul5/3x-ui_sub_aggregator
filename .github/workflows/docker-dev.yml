@@ -1,6 +1,10 @@
 name: Docker Dev Build
 
 on:
+  push:
+    paths:
+      - 'docker/**'
+      - 'app/**'
   workflow_dispatch:
     inputs:
       branch:
