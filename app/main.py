@@ -26,6 +26,16 @@ logger.setLevel(logging.INFO)
 logger.addHandler(logger_file)
 
 
+# Logging filter to exclude health checks from Uvicorn access logs
+class HealthCheckFilter(logging.Filter):
+    """Filter out /health endpoint requests from access logs"""
+    def filter(self, record):
+        return '/health' not in record.getMessage()
+
+# Apply filter to Uvicorn access logs
+logging.getLogger("uvicorn.access").addFilter(HealthCheckFilter())
+
+
 # Initialize FastAPI app
 app = FastAPI()
 
