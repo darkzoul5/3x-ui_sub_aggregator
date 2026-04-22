@@ -77,8 +77,8 @@ cp .env.example .env
 |GITHUB_TOKEN|Токен доступа GitHub (если файл находится в приватном репозитории)|ghp_dhoauigc7898374yduisdhSDHFHGf7|
 |SUB_NAME|Имя подписки, которое будет отображаться в клиенте. Если не указано, им станет subscription ID из 3x-ui|HFK|
 |PORT|Порт, на котором работает сервис|8000|
-|URL|Часть пути новой подписки|sub|
-|CLASH_URL|Часть пути Clash/Mihomo endpoint внутри `URL`|/clash|
+|URL|Часть пути VLESS/base64 endpoint. Оставьте пустым, чтобы отключить VLESS endpoint.|sub|
+|CLASH_URL|Часть пути Clash/Mihomo endpoint. Оставьте пустым, чтобы отключить Clash endpoint.|/clash|
 
 ### Файлы шаблонов Clash
 

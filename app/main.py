@@ -23,6 +23,9 @@ LOG_LEVEL = os.getenv('LOG_LEVEL', 'INFO').upper()
 path = os.getenv('URL', 'sub').strip('/')
 clash_path = os.getenv('CLASH_URL', '/clash').strip('/')
 
+if not path and not clash_path:
+    raise RuntimeError("Both URL and CLASH_URL are empty. Configure at least one endpoint path.")
+
 
 def _resolve_log_level(level_name: str) -> int:
     return getattr(logging, level_name, logging.INFO)
@@ -143,6 +146,8 @@ async def fetch_subscription(
 
 def _build_vless_url(server_url: str, sub_id: str) -> str:
     '''Build full VLESS subscription URL from server base URL and sub_id.'''
+    if not path:
+        raise HTTPException(status_code=500, detail="VLESS endpoint is disabled")
     full_url = f"{server_url}/{path}/{sub_id}"
     logger.info(f"Built VLESS URL: {full_url}")
     return full_url
@@ -150,6 +155,8 @@ def _build_vless_url(server_url: str, sub_id: str) -> str:
 
 def _build_clash_url(server_url: str, sub_id: str) -> str:
     '''Build full Clash subscription URL from server base URL and sub_id.'''
+    if not clash_path:
+        raise HTTPException(status_code=500, detail="Clash endpoint is disabled")
     full_url = f"{server_url}/{clash_path}/{sub_id}"
     logger.info(f"Built Clash URL: {full_url}")
     return full_url
@@ -412,8 +419,6 @@ async def health() -> Response:
     return Response(content='OK', media_type='text/plain', status_code=200)
 
 
-@app.get(f'/{clash_path}/{{sub_id}}')
-@app.get(f'/{clash_path}')
 async def clash(sub_id: str = "") -> Response:
     '''
     API endpoint to aggregate native 3x-ui clash (Mihomo) subscriptions.
@@ -432,8 +437,6 @@ async def clash(sub_id: str = "") -> Response:
     return Response(content=clash_yaml, media_type='text/plain', headers=_subscription_headers())
 
 
-@app.get(f'/{path}/{{sub_id}}')
-@app.get(f'/{path}')
 async def main(sub_id: str = "") -> Response:
     '''
     API endpoint to aggregate VLESS/base64 subscriptions.\n
@@ -451,3 +454,16 @@ async def main(sub_id: str = "") -> Response:
     logger.info(f"VLESS response ready: bytes={len(global_sub)}")
 
     return Response(content=global_sub, media_type='text/plain', headers=_subscription_headers())
+
+
+if clash_path:
+    app.add_api_route(f'/{clash_path}/{{sub_id}}', clash, methods=['GET'])
+    app.add_api_route(f'/{clash_path}', clash, methods=['GET'])
+else:
+    logger.warning("CLASH_URL is empty. Clash endpoint is disabled.")
+
+if path:
+    app.add_api_route(f'/{path}/{{sub_id}}', main, methods=['GET'])
+    app.add_api_route(f'/{path}', main, methods=['GET'])
+else:
+    logger.warning("URL is empty. VLESS endpoint is disabled.")

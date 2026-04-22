@@ -79,8 +79,8 @@ Edit the `.env` file with your own values:
 |GITHUB_TOKEN|GitHub token (required if the file is in a private repo)|ghp_dhoauigc7898374yduisdhSDHFHGf7|
 |SUB_NAME|Display name for the subscription in clients. If empty, the subscription ID will be used in most cases|HFK|
 |PORT|Port the service listens on|8000|
-|URL|Path segment used in the final subscription URL|sub|
-|CLASH_URL|Path segment for Clash/Mihomo endpoint under `URL`|/clash|
+|URL|Path segment for VLESS/base64 endpoint. Leave empty to disable VLESS endpoint.|sub|
+|CLASH_URL|Path segment for Clash/Mihomo endpoint. Leave empty to disable Clash endpoint.|/clash|
 
 ### Clash template files
 
