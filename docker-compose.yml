@@ -4,12 +4,13 @@ services:
       - "8000:8000"
     environment:
       - LOCAL_MODE=on/off
-      - FILE_PATH=config.txt
+      - CONFIG_DIR=/app/configs
       - CONFIG_URL=https://api.github.com/.../file.txt
       - GITHUB_TOKEN=${GITHUB_TOKEN}
       - URL=/sub
+      - CLASH_URL=/clash
     volumes:
-      - /path/to/config.txt:/app/config.txt
+      - /path/to/configs:/app/configs
     restart: unless-stopped
 
 networks:

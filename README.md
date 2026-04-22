@@ -7,7 +7,10 @@
 
 # 3x-ui_sub_aggregator
 
-An aggregator that combines multiple VLESS configurations from various 3x-ui servers into a unified subscription link.
+An aggregator that combines multiple 3x-ui configurations into one endpoint.
+It supports aggregation of:
+classic base64 subscriptions
+Clash/Mihomo YAML
 </div>
 
 ## Prepare
@@ -72,12 +75,25 @@ Edit the `.env` file with your own values:
 |variable|description|example|
 |:--:|:--|:--|
 |LOCAL_MODE|If enabled, the file will be read from the local host. Otherwise, it will be fetched from a remote repository.|on|
-|FILE_PATH|Absolute path to the `.txt` configuration file|/path/to/configs.txt|
+|CONFIG_DIR|Directory that contains `config.txt` and Clash template files|/app/configs|
 |CONFIG_URL|Link to the `.txt` configuration file hosted on GitHub|<https://api.github.com/.../file.txt>|
 |GITHUB_TOKEN|GitHub token (required if the file is in a private repo)|ghp_dhoauigc7898374yduisdhSDHFHGf7|
 |SUB_NAME|Display name for the subscription in clients. If empty, the subscription ID will be used in most cases|HFK|
 |PORT|Port the service listens on|8000|
 |URL|Path segment used in the final subscription URL|sub|
+|CLASH_URL|Path segment for Clash/Mihomo endpoint under `URL`|/clash|
+
+### Clash template files
+
+The service reads Clash templates from `CONFIG_DIR`:
+
+- `default-proxy-groups.yaml` (global default groups)
+- `default-rules.yaml` (global default rules)
+- `proxy-groups-{sub_id}.yaml` (optional per-ID groups override)
+- `rules-{sub_id}.yaml` (optional per-ID rules override)
+
+If per-ID files do not exist, defaults are used automatically.
+`config.txt` is also read from the same directory.
 
 ---
 
@@ -106,10 +122,8 @@ or image by version tag:
 
 The final aggregated link depends on your config:
 
-- Direct links only: `https://{DOMAIN}/{URL}/{SUB_NAME}`
-- With subscriptions: `https://{DOMAIN}/{URL}/subscription_id/{SUB_NAME}`
-
-(Omit `/{SUB_NAME}` if the variable is empty)
+- VLESS/base64: `https://{DOMAIN}/{URL}/subscription_id`
+- Clash/Mihomo YAML: `https://{DOMAIN}/{CLASH_URL}/subscription_id`
 
 For SSL/HTTPS, use Traefik or similar reverse proxy.
 

@@ -7,7 +7,8 @@
 
 # vless_config_aggregator
 
-Агрегатор, который объединяет множество различных VLESS-конфигураций с разных серверов в единую подписку.
+Агрегатор, который объединяет конфигурации 3x-ui в единую точку доступа.
+Поддерживаются агрегация классических VLESS base64-подписок и Clash/Mihomo YAML.
 </div>
 
 ## Подготовка
@@ -70,12 +71,25 @@ cp .env.example .env
 |variable|description|example|
 |:--:|:--|:--|
 |LOCAL_MODE|Если включено, ищет файл на хосте. Иначе пытается достать из удалённого репозитория|on|
-|FILE_PATH|Абсолютный путь к `.txt` файлу конфигураций|/path/to/configs.txt|
+|CONFIG_DIR|Директория с `config.txt` и шаблонами Clash|/app/configs|
 |CONFIG_URL|Ссылка на `.txt` файл конфигураций|<https://api.github.com/.../file.txt>|
 |GITHUB_TOKEN|Токен доступа GitHub (если файл находится в приватном репозитории)|ghp_dhoauigc7898374yduisdhSDHFHGf7|
 |SUB_NAME|Имя подписки, которое будет отображаться в клиенте. Если не указано, им станет subscription ID из 3x-ui|HFK|
 |PORT|Порт, на котором работает сервис|8000|
 |URL|Часть пути новой подписки|sub|
+|CLASH_URL|Часть пути Clash/Mihomo endpoint внутри `URL`|/clash|
+
+### Файлы шаблонов Clash
+
+Сервис читает шаблоны Clash из `CONFIG_DIR`:
+
+- `default-proxy-groups.yaml` (глобальные группы по умолчанию)
+- `default-rules.yaml` (глобальные правила по умолчанию)
+- `proxy-groups-{sub_id}.yaml` (опциональная подмена групп для конкретного ID)
+- `rules-{sub_id}.yaml` (опциональная подмена правил для конкретного ID)
+
+Если файлов для конкретного ID нет, автоматически используются default-файлы.
+Файл `config.txt` также читается из этой же директории.
 
 ---
 
@@ -99,10 +113,8 @@ cp .env.example .env
 
 Итоговая ссылка на подписку зависит от вашей конфигурации:
 
-- Только прямые ссылки: `https://{DOMAIN}/{URL}/{SUB_NAME}`
-- С подписками: `https://{DOMAIN}/{URL}/subscription_id/{SUB_NAME}`
-
-В обоих случаях часть /{SUB_NAME} не нужна, если переменная пуста.
+- VLESS/base64: `https://{DOMAIN}/{URL}/subscription_id`
+- Clash/Mihomo YAML: `https://{DOMAIN}/{CLASH_URL}/subscription_id`
 
 ---
 
