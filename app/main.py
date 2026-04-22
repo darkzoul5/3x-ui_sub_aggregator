@@ -298,6 +298,26 @@ def _hydrate_proxy_groups(
     return hydrated
 
 
+def _strip_email_from_names(proxies: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    '''
+    Strip email suffix from proxy names.
+    Pattern: inbound-email → inbound
+    '''
+    stripped = []
+    for proxy in proxies:
+        if not isinstance(proxy, dict):
+            continue
+        current = dict(proxy)
+        name = current.get('name')
+        if isinstance(name, str) and '-' in name:
+            # Take the part before the first hyphen
+            clean_name = name.split('-', 1)[0].strip()
+            if clean_name:
+                current['name'] = clean_name
+        stripped.append(current)
+    return stripped
+
+
 def _deduplicate_proxy_names(proxies: list[dict[str, Any]]) -> list[dict[str, Any]]:
     seen: dict[str, int] = {}
     renamed = 0
@@ -311,12 +331,6 @@ def _deduplicate_proxy_names(proxies: list[dict[str, Any]]) -> list[dict[str, An
             continue
 
         base_name = name.strip()
-        # 3x-ui proxy names are often in "inbound-user" format.
-        # Keep only the inbound part for cleaner output and stable group matching.
-        if '-' in base_name:
-            inbound_name, suffix = base_name.rsplit('-', 1)
-            if inbound_name and suffix:
-                base_name = inbound_name
         count = seen.get(base_name, 0) + 1
         seen[base_name] = count
 
@@ -405,6 +419,7 @@ async def merge_clash(server_urls: list[str], sub_id: str) -> dict[str, Any]:
 
     logger.info(f"Clash fetch summary: sources={len(clash_urls)}, total_proxies_before_dedupe={len(proxies)}")
 
+    proxies = _strip_email_from_names(proxies)
     proxies = _deduplicate_proxy_names(proxies)
     if not proxies:
         logger.error("No clash proxies available")
