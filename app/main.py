@@ -5,6 +5,7 @@ import re
 import yaml
 import logging
 import logging.handlers
+import sys
 from asyncio import gather
 from binascii import Error as BinasciiError
 from typing import Any
@@ -19,15 +20,18 @@ logger_file = logging.handlers.TimedRotatingFileHandler(
     interval=3,
     backupCount=5   # Keep up to 5 log files
 )
+logger_console = logging.StreamHandler(sys.stdout)
 formatter = logging.Formatter(
     fmt='[{asctime}] #{levelname:8} {filename}:{lineno} - {message}',
     style='{'
 )
 logger_file.setFormatter(formatter)
+logger_console.setFormatter(formatter)
 logger = logging.getLogger()
 logger.handlers.clear()
 logger.setLevel(logging.INFO)
 logger.addHandler(logger_file)
+logger.addHandler(logger_console)
 
 
 # Logging filter to exclude health checks from Uvicorn access logs
@@ -60,6 +64,7 @@ async def fetch_links() -> list[str]:
     try:
         if os.getenv('LOCAL_MODE') == 'on':
             config_path = os.path.join(CONFIG_DIR, 'config.txt')
+            logger.info(f"Loading server URLs from local config: {config_path}")
             with open(config_path, encoding='utf-8') as file:
                 lines = file.readlines()
 
@@ -80,12 +85,14 @@ async def fetch_links() -> list[str]:
                 )
                 response.raise_for_status()
                 lines = response.text.splitlines()
+                logger.info(f"Loaded server URLs from remote config: {os.getenv('CONFIG_URL')}")
             
         server_urls = [
             line.strip().rstrip('/')
             for line in lines
             if line.strip().startswith('http')
         ]
+        logger.info(f"Discovered {len(server_urls)} server URLs from config.txt")
             
         return server_urls
     except httpx.HTTPStatusError as e:
@@ -127,12 +134,16 @@ async def fetch_subscription(
 
 def _build_vless_url(server_url: str, sub_id: str) -> str:
     '''Build full VLESS subscription URL from server base URL and sub_id.'''
-    return f"{server_url}/{path}/{sub_id}"
+    full_url = f"{server_url}/{path}/{sub_id}"
+    logger.info(f"Built VLESS URL: {full_url}")
+    return full_url
 
 
 def _build_clash_url(server_url: str, sub_id: str) -> str:
     '''Build full Clash subscription URL from server base URL and sub_id.'''
-    return f"{server_url}/{clash_path}/{sub_id}"
+    full_url = f"{server_url}/{clash_path}/{sub_id}"
+    logger.info(f"Built Clash URL: {full_url}")
+    return full_url
 
 
 async def merge_all(server_urls: list[str], sub_id: str) -> bytes:
@@ -146,12 +157,14 @@ async def merge_all(server_urls: list[str], sub_id: str) -> bytes:
     '''
     async with httpx.AsyncClient(verify=False) as client:
         vless_urls = [_build_vless_url(url, sub_id) for url in server_urls]
+        logger.info(f"Fetching {len(vless_urls)} VLESS subscriptions")
         fetch_tasks = [
             fetch_subscription(client, vless_url)
             for vless_url in vless_urls
         ]
         results = await gather(*fetch_tasks)
         data = [x for x in results if x is not None]
+        logger.info(f"VLESS fetch summary: success={len(data)}, failed={len(vless_urls) - len(data)}")
         
         if not data:
             logger.error("No subscriptions available")
@@ -325,6 +338,7 @@ async def fetch_clash_subscription(
         logger.info(f"Fetching clash subscription from: {clash_url}")
         response = await client.get(clash_url, timeout=4)
         response.raise_for_status()
+        logger.info(f"Clash response status={response.status_code}, bytes={len(response.text)} from {clash_url}")
 
         parsed = _parse_yaml_payload(response.text)
         if parsed is None:
@@ -347,6 +361,7 @@ async def fetch_clash_subscription(
 async def merge_clash(server_urls: list[str], sub_id: str) -> dict[str, Any]:
     async with httpx.AsyncClient(verify=False) as client:
         clash_urls = [_build_clash_url(url, sub_id) for url in server_urls]
+        logger.info(f"Fetching {len(clash_urls)} Clash subscriptions")
         tasks = [
             fetch_clash_subscription(client, clash_url)
             for clash_url in clash_urls
@@ -356,6 +371,8 @@ async def merge_clash(server_urls: list[str], sub_id: str) -> dict[str, Any]:
     proxies: list[dict[str, Any]] = []
     for items in responses:
         proxies.extend(items)
+
+    logger.info(f"Clash fetch summary: sources={len(clash_urls)}, total_proxies_before_dedupe={len(proxies)}")
 
     proxies = _deduplicate_proxy_names(proxies)
     if not proxies:
@@ -392,6 +409,10 @@ async def clash(sub_id: str = "") -> Response:
 
     clash_doc = await merge_clash(server_urls, sub_id)
     clash_yaml = yaml.safe_dump(clash_doc, sort_keys=False, allow_unicode=True)
+    logger.info(
+        f"Clash response ready: proxies={len(clash_doc.get('proxies', []))}, "
+        f"groups={len(clash_doc.get('proxy-groups', []))}, rules={len(clash_doc.get('rules', []))}"
+    )
     return Response(content=clash_yaml, media_type='text/plain', headers=_subscription_headers())
 
 
@@ -411,5 +432,6 @@ async def main(sub_id: str = "") -> Response:
     
     result = await merge_all(server_urls, sub_id)
     global_sub = base64.b64encode(result)
+    logger.info(f"VLESS response ready: bytes={len(global_sub)}")
 
     return Response(content=global_sub, media_type='text/plain', headers=_subscription_headers())
