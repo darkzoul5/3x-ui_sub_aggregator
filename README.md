@@ -7,8 +7,8 @@
 
 Aggregate multiple 3x-ui subscriptions into a single endpoint.
 
-[!Note]
-This was made for 3x-ui before v2.9.0. This may not be as useful in later versions
+> [!NOTE]
+> This was made for 3x-ui before v2.9.0. This may not be as useful in later versions
 
 Supported output formats:
 
