@@ -7,6 +7,11 @@ on:
         description: 'Release version (e.g., 1.0.0)'
         required: true
         type: string
+      draft:
+        description: 'Create as draft release'
+        required: true
+        default: true
+        type: boolean
 
 env:
   REGISTRY: ghcr.io
@@ -135,4 +140,5 @@ jobs:
         uses: softprops/action-gh-release@v3
         with:
           tag_name: ${{ steps.version.outputs.tag_version }}
+          draft: ${{ inputs.draft }}
           body_path: RELEASE_NOTES.md
