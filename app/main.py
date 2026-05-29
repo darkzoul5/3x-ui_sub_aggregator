@@ -4,7 +4,7 @@ from fastapi import FastAPI, Response, HTTPException
 
 from clash import merge_clash
 from logger_setup import logger
-from settings import clash_path, path
+from settings import APP_VERSION, CONFIG_DIR, SUB_NAME, clash_path, path
 from shared import fetch_links, _subscription_headers
 from vless import merge_all
 import yaml
@@ -12,6 +12,13 @@ import yaml
 
 app = FastAPI()
 
+@app.on_event("startup")
+async def startup_banner() -> None:
+    logger.info("Starting 3x-ui aggregator %s", APP_VERSION)
+    logger.info("Subscription name: %s", SUB_NAME)
+    logger.info("Config directory: %s", CONFIG_DIR)
+    logger.info("Legacy VLESS endpoint: %s", f"/{path}" if path else "<disabled>")
+    logger.info("Clash endpoint: %s", f"/{clash_path}" if clash_path else "<disabled>")
 
 @app.get('/health')
 async def health() -> Response:

@@ -43,6 +43,10 @@ jobs:
           echo "version=$VERSION" >> $GITHUB_OUTPUT
           echo "tag_version=${{ github.event.inputs.version }}" >> $GITHUB_OUTPUT
 
+      - name: Write version file
+        run: |
+          printf '%s\n' "${{ steps.version.outputs.version }}" > app/VERSION
+
       - name: Extract Docker metadata
         id: meta
         uses: docker/metadata-action@v6
