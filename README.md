@@ -29,7 +29,9 @@ For Clash output, it also:
 - merges all proxies,
 - strips email-like suffix from proxy names,
 - deduplicates proxy names,
-- applies proxy groups and rules from template files.
+- auto-generates proxy groups from common server-name prefixes when no manual group file is present,
+- uses manual proxy-group files as a full override when they exist,
+- applies rules from template files.
 
 ## Requirements
 
@@ -183,7 +185,21 @@ Read from `CONFIG_DIR`:
 - `proxy-groups-{sub_id}.yaml` (optional per-user override)
 - `rules-{sub_id}.yaml` (optional per-user override)
 
-If a per-user file exists, it is used instead of default.
+Proxy group behavior:
+
+- If `proxy-groups-{sub_id}.yaml` exists, it replaces auto generation completely.
+- Otherwise, the app auto-generates groups from the returned Clash proxies.
+- If `proxy-groups-{sub_id}.yaml` does not exist, `default-proxy-groups.yaml` is used if present.
+
+Auto generation groups proxies by normalized server name. For example:
+
+- `sweden 1`
+- `sweden 2`
+- `sweden 443`
+
+all become one `sweden` group.
+
+If there is only one proxy in a group, it still remains a valid one-item group.
 
 ## Local run (without Docker)
 

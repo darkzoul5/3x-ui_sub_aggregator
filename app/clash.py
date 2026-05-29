@@ -1,7 +1,9 @@
 import base64
 import os
+import re
 from asyncio import gather
 from binascii import Error as BinasciiError
+from collections import OrderedDict
 from typing import Any
 
 import httpx
@@ -22,15 +24,15 @@ def _build_clash_url(server_url: str, sub_id: str) -> str:
     return full_url
 
 
-def _load_proxy_groups(sub_id: str) -> list[dict[str, Any]]:
+def _load_proxy_groups(sub_id: str) -> list[dict[str, Any]] | None:
     file_path = _resolve_config_file(
         default_name='default-proxy-groups.yaml',
         pattern='proxy-groups-{sub_id}.yaml',
         sub_id=sub_id,
     )
     if not os.path.exists(file_path):
-        logger.warning(f"Proxy groups config file is missing: {file_path}")
-        return []
+        logger.info(f"Proxy groups config file is missing: {file_path}")
+        return None
 
     data = _load_yaml_file(file_path)
     groups = data.get('proxy-groups', data) if isinstance(data, (dict, list)) else []
@@ -60,31 +62,6 @@ def _load_rules(sub_id: str) -> list[str]:
     result = [rule for rule in rules if isinstance(rule, str) and rule.strip()]
     logger.info(f"Loaded {len(result)} rules from {file_path}")
     return result
-
-
-def _hydrate_proxy_groups(
-    groups: list[dict[str, Any]],
-    proxy_names: list[str],
-) -> list[dict[str, Any]]:
-    hydrated = []
-
-    for group in groups:
-        updated_group = dict(group)
-        current = updated_group.get('proxies', [])
-
-        if not current:
-            updated_group['proxies'] = list(proxy_names)
-        elif isinstance(current, list):
-            updated_group['proxies'] = [name for name in current if isinstance(name, str)]
-        else:
-            logger.warning(
-                f"Group '{updated_group.get('name')}' has invalid 'proxies' type; using all aggregated proxies"
-            )
-            updated_group['proxies'] = list(proxy_names)
-
-        hydrated.append(updated_group)
-
-    return hydrated
 
 
 def _strip_email_from_names(proxies: list[dict[str, Any]]) -> list[dict[str, Any]]:
@@ -132,6 +109,66 @@ def _deduplicate_proxy_names(proxies: list[dict[str, Any]]) -> list[dict[str, An
         logger.info(f"Renamed {renamed} duplicate proxy names")
 
     return deduplicated
+
+
+def _normalize_proxy_group_name(name: str) -> str:
+    """
+    Derive a common base name for a proxy group.
+
+    Examples:
+    - sweden 1 -> sweden
+    - sweden-443 -> sweden
+    - latvia 1 -> latvia
+    """
+    normalized = re.sub(r'\s+', ' ', name).strip()
+
+    while True:
+        stripped = re.sub(r'(?:[ _.-]*\d+)+$', '', normalized).strip(' ._-')
+        if not stripped or stripped == normalized:
+            break
+        normalized = stripped
+
+    return normalized or name.strip()
+
+
+def _generate_proxy_groups(proxies: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    grouped: "OrderedDict[str, dict[str, Any]]" = OrderedDict()
+
+    for proxy in proxies:
+        if not isinstance(proxy, dict):
+            continue
+
+        name = proxy.get('name')
+        if not isinstance(name, str) or not name.strip():
+            continue
+
+        display_name = _normalize_proxy_group_name(name)
+        group_key = display_name.casefold()
+
+        if group_key not in grouped:
+            grouped[group_key] = {
+                'name': display_name,
+                'type': 'select',
+                'proxies': [],
+            }
+
+        grouped[group_key]['proxies'].append(name)
+
+    generated_groups = list(grouped.values())
+    if not generated_groups:
+        return []
+
+    root_group_name = 'Proxy'
+    if any(group['name'].casefold() == root_group_name.casefold() for group in generated_groups):
+        root_group_name = 'Auto'
+
+    root_group = {
+        'name': root_group_name,
+        'type': 'select',
+        'proxies': [group['name'] for group in generated_groups] + ['DIRECT'],
+    }
+
+    return [root_group, *generated_groups]
 
 
 def _parse_yaml_payload(payload: str) -> dict[str, Any] | None:
@@ -213,8 +250,14 @@ async def merge_clash(server_urls: list[str], sub_id: str) -> dict[str, Any]:
         logger.error("No clash proxies available")
         raise HTTPException(status_code=500, detail="There are no clash proxies to return")
 
-    proxy_names = [proxy['name'] for proxy in proxies]
-    groups = _hydrate_proxy_groups(_load_proxy_groups(sub_id), proxy_names)
+    manual_groups = _load_proxy_groups(sub_id)
+    if manual_groups is not None:
+        groups = manual_groups
+        logger.info(f"Using manual proxy groups from config for sub_id={sub_id!r}")
+    else:
+        groups = _generate_proxy_groups(proxies)
+        logger.info(f"Auto-generated {len(groups)} proxy groups from {len(proxies)} proxies")
+
     rules = _load_rules(sub_id)
 
     return {

@@ -1,5 +1,7 @@
 # Dynamic Clash Group Generation Plan
 
+Status: implemented
+
 ## Goal
 
 Move the Clash endpoint to the native 3x-ui Clash subscription and generate proxy groups automatically from the returned proxies.
@@ -56,9 +58,9 @@ Keep the old `vless://` conversion path as a separate legacy endpoint.
 
 ## Implementation order
 
-1. Split endpoint behavior in `app/main.py`.
-2. Add proxy-name normalization and grouping helpers.
-3. Wire auto generation into the Clash merge path.
-4. Preserve manual proxy-groups as a full override.
-5. Update docs and examples.
-6. Add tests for grouping and endpoint behavior.
+1. Split endpoint behavior in `app/main.py`. Done.
+2. Add proxy-name normalization and grouping helpers. Done.
+3. Wire auto generation into the Clash merge path. Done.
+4. Preserve manual proxy-groups as a full override. Done.
+5. Update docs and examples. Done.
+6. Add tests for grouping and endpoint behavior. Done.
