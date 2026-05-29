@@ -15,6 +15,23 @@ Supported output formats:
 - VLESS/base64 subscription
 - Clash/Mihomo YAML subscription
 
+## Contents
+
+| Section | Link |
+| --- | --- |
+| What this service does | [What this service does](#what-this-service-does) |
+| Requirements | [Requirements](#requirements) |
+| Quick start (Docker) | [Quick start (Docker)](#quick-start-docker) |
+| Endpoints | [Endpoints](#endpoints) |
+| URL setup explained | [URL setup explained](#url-setup-explained) |
+| Configuration reference | [Configuration reference](#configuration-reference) |
+| Environment variables | [Environment variables](#environment-variables) |
+| Source list file | [Source list file](#source-list-file) |
+| Clash template files | [Clash template files](#clash-template-files) |
+| Local run (without Docker) | [Local run (without Docker)](#local-run-without-docker) |
+| Troubleshooting | [Troubleshooting](#troubleshooting) |
+| Attribution and license | [Attribution and license](#attribution-and-license) |
+
 ## What this service does
 
 1. Reads a list of source panel base URLs from `config.txt`.
