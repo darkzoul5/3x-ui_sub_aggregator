@@ -148,7 +148,7 @@ def _generate_proxy_groups(proxies: list[dict[str, Any]]) -> list[dict[str, Any]
         if group_key not in grouped:
             grouped[group_key] = {
                 'name': display_name,
-                'type': 'select',
+                'type': 'fallback',
                 'proxies': [],
             }
 

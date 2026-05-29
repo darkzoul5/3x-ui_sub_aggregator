@@ -104,6 +104,8 @@ class ClashGroupTests(IsolatedAsyncioTestCase):
         self.assertEqual(groups[0]["proxies"], ["sweden", "latvia", "DIRECT"])
 
         by_name = {group["name"]: group for group in groups[1:]}
+        self.assertEqual(by_name["sweden"]["type"], "fallback")
+        self.assertEqual(by_name["latvia"]["type"], "fallback")
         self.assertEqual(by_name["sweden"]["proxies"], ["sweden 1", "sweden 2", "sweden 443"])
         self.assertEqual(by_name["latvia"]["proxies"], ["latvia 1"])
 
@@ -141,5 +143,8 @@ class ClashGroupTests(IsolatedAsyncioTestCase):
 
         group_names = [group["name"] for group in result["proxy-groups"]]
         self.assertEqual(group_names, ["Proxy", "sweden", "latvia"])
+        self.assertEqual(result["proxy-groups"][0]["type"], "select")
+        self.assertEqual(result["proxy-groups"][1]["type"], "fallback")
+        self.assertEqual(result["proxy-groups"][2]["type"], "fallback")
         self.assertEqual(result["proxy-groups"][1]["proxies"], ["sweden 1", "sweden 2", "sweden 443"])
         self.assertEqual(result["proxy-groups"][2]["proxies"], ["latvia 1"])
