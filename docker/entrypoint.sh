@@ -30,4 +30,4 @@ echo "  CONFIG_DIR: $CONFIG_DIR"
 echo "  LOG_LEVEL: $LOG_LEVEL"
 
 # Run FastAPI
-exec uvicorn main:app --host 0.0.0.0 --port $PORT --log-level "$LOG_LEVEL"
+exec uvicorn main:app --app-dir /app --host 0.0.0.0 --port $PORT --log-level "$LOG_LEVEL"

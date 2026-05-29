@@ -8,7 +8,7 @@ WORKDIR /app
 COPY app/requirements.txt /app/
 RUN pip install --no-cache-dir -r requirements.txt
 
-COPY app/main.py /app/
+COPY app/*.py /app/
 
 # Copy and setup entrypoint script
 COPY docker/entrypoint.sh /entrypoint.sh
