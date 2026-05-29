@@ -23,6 +23,8 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v4
@@ -65,17 +67,72 @@ jobs:
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
 
+      - name: Generate release notes
+        id: notes
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          OWNER: ${{ github.repository_owner }}
+          OWNER_TYPE: ${{ github.event.repository.owner.type }}
+          IMAGE_NAME: ${{ env.IMAGE_NAME }}
+          IMAGE_VERSION: ${{ steps.version.outputs.version }}
+          TAG_VERSION: ${{ steps.version.outputs.tag_version }}
+        run: |
+          set -euo pipefail
+
+          PREV_TAG="$(git describe --tags --abbrev=0 2>/dev/null || true)"
+          if [ -n "$PREV_TAG" ]; then
+            RANGE="${PREV_TAG}..HEAD"
+            CHANGE_TITLE="Changes since ${PREV_TAG}"
+          else
+            RANGE="HEAD"
+            CHANGE_TITLE="Changes"
+          fi
+
+          COMMITS="$(git log --no-merges --pretty=format:'- %s (%h)' $RANGE || true)"
+          if [ -z "$COMMITS" ]; then
+            COMMITS="- No commits found"
+          fi
+
+          PACKAGE_NAME="${IMAGE_NAME#*/}"
+          SCOPE="users"
+          if [ "${OWNER_TYPE}" = "Organization" ]; then
+            SCOPE="orgs"
+          fi
+
+          DOWNLOAD_COUNT="unknown"
+          PACKAGE_VERSION_ID="$(gh api "/${SCOPE}/${OWNER}/packages/container/${PACKAGE_NAME}/versions?per_page=100" --jq ".[] | select(.metadata.container.tags[]? == \"${IMAGE_VERSION}\") | .id" | head -n 1 || true)"
+          if [ -n "$PACKAGE_VERSION_ID" ]; then
+            DOWNLOAD_COUNT="$(gh api "/${SCOPE}/${OWNER}/packages/container/${PACKAGE_NAME}/versions/${PACKAGE_VERSION_ID}" --jq '.download_count // .metadata.download_count // empty' || true)"
+            if [ -z "$DOWNLOAD_COUNT" ]; then
+              DOWNLOAD_COUNT="unknown"
+            fi
+          fi
+
+          {
+            echo "## Docker Images"
+            echo ""
+            echo "\`${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.version.outputs.version }}\`"
+            echo "\`${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest\`"
+            echo "\`${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:dev\` latest commit image for testing"
+            echo ""
+            echo "## Release Stats"
+            echo ""
+            echo "![Image downloads](https://img.shields.io/badge/image%20downloads-${DOWNLOAD_COUNT}-blue?style=flat-square)"
+            echo ""
+            echo "## ${CHANGE_TITLE}"
+            echo ""
+            echo "${COMMITS}"
+            echo ""
+            echo "## Installation"
+            echo ""
+            echo "1. Copy \`.env.example\` to \`.env\` and update configuration"
+            echo "2. Run: \`docker compose up -d\`"
+            echo ""
+            echo "See README.md for detailed setup instructions."
+          } > RELEASE_NOTES.md
+
       - name: Create Release
         uses: softprops/action-gh-release@v3
         with:
           tag_name: ${{ steps.version.outputs.tag_version }}
-          body: |
-            ## Docker Images
-            `${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.version.outputs.version }}`
-            `${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest`
-            `${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:dev` latest commit image for testing
-            ## Installation
-            1. Copy `.env.example` to `.env` and update configuration
-            2. Run: `docker compose up -d`
-            
-            See README.md for detailed setup instructions.
+          body_path: RELEASE_NOTES.md
