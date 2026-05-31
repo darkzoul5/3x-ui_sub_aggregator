@@ -7,8 +7,8 @@ services:
       - CONFIG_DIR=/app/configs
       - CONFIG_URL=https://api.github.com/.../file.txt
       - GITHUB_TOKEN=${GITHUB_TOKEN}
-      - URL=/sub
-      - CLASH_URL=/clash
+      - SUB_PATH=/sub
+      - CLASH_PATH=/clash
       #- LOG_LEVEL=info
     volumes:
       - /path/to/configs:/app/configs

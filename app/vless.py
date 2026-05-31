@@ -6,7 +6,7 @@ import httpx
 from fastapi import HTTPException
 
 from logger_setup import logger
-from settings import path
+from settings import SUB_PATH
 
 
 async def fetch_subscription(
@@ -37,9 +37,9 @@ async def fetch_subscription(
 
 def _build_vless_url(server_url: str, sub_id: str) -> str:
     """Build full VLESS subscription URL from server base URL and sub_id."""
-    if not path:
+    if not SUB_PATH:
         raise HTTPException(status_code=500, detail="VLESS endpoint is disabled")
-    full_url = f"{server_url}/{path}/{sub_id}"
+    full_url = f"{server_url}/{SUB_PATH}/{sub_id}"
     logger.info(f"Built VLESS URL: {full_url}")
     return full_url
 

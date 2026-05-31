@@ -16,8 +16,9 @@
 
 1. Читает список базовых URL исходных панелей из `config.txt`.
 2. Формирует URL исходных подписок для запрошенного `sub_id`:
-    - `{server_url}/{URL}/{sub_id}` для VLESS/base64
-    - `{server_url}/{CLASH_URL}/{sub_id}` для Clash
+    - `{server_url}/{SUB_PATH}/{sub_id}` для VLESS/base64
+    - `{server_url}/{SUB_PATH}/clash/{sub_id}` для преобразования VLESS в Clash
+    - `{server_url}/{CLASH_PATH}/{sub_id}` для нативного Clash
 3. Параллельно получает подписки со всех источников.
 4. Возвращает одну объединенную подписку.
 
@@ -70,31 +71,37 @@ docker compose up -d
 
 ## Эндпоинты
 
-Приложение динамически создает маршруты на основе `URL` и `CLASH_URL`.
+Приложение динамически создает маршруты на основе переменных окружения путей.
 
 - VLESS/base64:
-  - `GET /{URL}`
-  - `GET /{URL}/{sub_id}`
-- Clash/Mihomo:
-  - `GET /{CLASH_URL}`
-  - `GET /{CLASH_URL}/{sub_id}`
+  - `GET /{SUB_PATH}`
+  - `GET /{SUB_PATH}/{sub_id}`
+- Clash/Mihomo преобразование из VLESS:
+  - `GET /{SUB_PATH}/clash`
+  - `GET /{SUB_PATH}/clash/{sub_id}`
+- Нативный Clash/Mihomo:
+  - `GET /{CLASH_PATH}`
+  - `GET /{CLASH_PATH}/{sub_id}`
 - Проверка состояния:
   - `GET /health`
 
-Примеры (при `URL=sub` и `CLASH_URL=clash`):
+Примеры (при `SUB_PATH=sub` и `CLASH_PATH=clash`):
 
 - `http://localhost:8000/sub/my_sub_id`
+- `http://localhost:8000/sub/clash/my_sub_id`
 - `http://localhost:8000/clash/my_sub_id`
 - `http://localhost:8000/health`
 
-Если `URL` или `CLASH_URL` пустые, соответствующий тип эндпоинта отключается.
+Если `SUB_PATH` пустой, отключаются VLESS-агрегация и преобразование VLESS в Clash.
+Если `CLASH_PATH` пустой, отключается нативный Clash-эндпоинт.
 
 ## Объяснение настройки URL
 
 Агрегатор формирует финальные URL источников по следующей формуле:
 
-- URL источника VLESS/base64: `{line_from_config.txt}/{URL}/{sub_id}`
-- URL источника Clash: `{line_from_config.txt}/{CLASH_URL}/{sub_id}`
+- URL источника VLESS/base64: `{line_from_config.txt}/{SUB_PATH}/{sub_id}`
+- URL преобразования VLESS в Clash: `{line_from_config.txt}/{SUB_PATH}/clash/{sub_id}`
+- URL нативного Clash: `{line_from_config.txt}/{CLASH_PATH}/{sub_id}`
 
 Поэтому обычно каждая строка в `config.txt` должна содержать только базовый URL сервера:
 
@@ -105,8 +112,8 @@ https://server-2.example.com:8443
 
 Затем задайте общие сегменты пути в переменных окружения:
 
-- `URL=sub`
-- `CLASH_URL=clash`
+- `SUB_PATH=sub`
+- `CLASH_PATH=clash`
 
 При `sub_id=user123` агрегатор будет отправлять запросы на:
 
@@ -122,8 +129,8 @@ https://server-2.example.com:8443
 
 Примечания:
 
-- URL источника 3x-ui и URL агрегатора должны иметь одинаковую структуру пути (`/{URL}/{sub_id}` и `/{CLASH_URL}/{sub_id}`); отличается только домен/хост.
-- `URL` и `CLASH_URL` являются глобальными для всех источников.
+- URL источника 3x-ui и URL агрегатора должны иметь одинаковую структуру пути (`/{SUB_PATH}/{sub_id}`, `/{SUB_PATH}/clash/{sub_id}` и `/{CLASH_PATH}/{sub_id}`); отличается только домен/хост.
+- `SUB_PATH` и `CLASH_PATH` являются глобальными для всех источников.
 - Если источник использует другую структуру пути, нормализуйте ее через обратный прокси (reverse proxy) или добавляйте источник с полным префиксом пути в `config.txt` только если итоговый URL все равно соответствует формуле.
 
 ## Справочник по конфигурации
@@ -138,8 +145,8 @@ https://server-2.example.com:8443
 | `GITHUB_TOKEN` | Опционально | - | Токен для доступа к raw-файлу приватного GitHub-репозитория. |
 | `SUB_NAME` | Нет | `Aggregated` | Отображаемое имя подписки в заголовках ответа. |
 | `PORT` | Нет | `8000` | Порт прослушивания Uvicorn. |
-| `URL` | Нет | `sub` | Сегмент пути для VLESS/base64 эндпоинта. Пустое значение отключает VLESS. |
-| `CLASH_URL` | Нет | `clash` | Сегмент пути для Clash эндпоинта. Пустое значение отключает Clash. |
+| `SUB_PATH` | Нет | `sub` | Сегмент пути для VLESS/base64 эндпоинта. Пустое значение отключает VLESS и преобразование в Clash. |
+| `CLASH_PATH` | Нет | `clash` | Сегмент пути для нативного Clash эндпоинта. Пустое значение отключает Clash. |
 | `LOG_LEVEL` | Нет | `INFO` | Уровень логирования (`DEBUG`, `INFO`, `WARNING`, `ERROR`, ...). |
 
 ### Файл списка источников
@@ -164,7 +171,7 @@ https://3x-ui.example.com/panelA
 https://3x-ui.example.com/averyrandomstring
 ```
 
-Если `URL=sub` и `sub_id=user123`, агрегатор вызовет:
+Если `SUB_PATH=sub` и `sub_id=user123`, агрегатор вызовет:
 
 ```txt
 https://3x-ui.example.com/panelA/sub/user123
@@ -199,7 +206,7 @@ uvicorn main:app --host 0.0.0.0 --port 8000
 - `404 Config file not found`:
   - проверьте `CONFIG_URL`, права токена и то, что URL действительно возвращает raw-текст.
 - Пустая или неуспешная агрегация:
-  - проверьте, что каждый URL источника действительно отдает настроенные пути `URL` и/или `CLASH_URL`.
+  - проверьте, что каждый URL источника действительно отдает настроенные пути `SUB_PATH` и/или `CLASH_PATH`.
   - проверьте, что `sub_id` существует на всех исходных панелях.
 - В Clash-выводе нет групп/правил:
   - проверьте шаблонные файлы в `CONFIG_DIR` и корректность YAML-синтаксиса.

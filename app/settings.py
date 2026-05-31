@@ -9,8 +9,8 @@ load_dotenv()
 SUB_NAME = os.getenv('SUB_NAME', 'Aggregated')
 CONFIG_DIR = os.getenv('CONFIG_DIR', '/app/configs')
 LOG_LEVEL = os.getenv('LOG_LEVEL', 'INFO').upper()
-path = os.getenv('URL', 'sub').strip('/')
-clash_path = os.getenv('CLASH_URL', '/clash').strip('/')
+SUB_PATH = os.getenv('SUB_PATH', os.getenv('URL', 'sub')).strip('/')
+CLASH_PATH = os.getenv('CLASH_PATH', os.getenv('CLASH_URL', 'clash')).strip('/')
 VERSION_FILE = os.getenv('VERSION_FILE', '/app/VERSION')
 
 
@@ -25,5 +25,7 @@ def _read_version_file(file_path: str) -> str:
 
 APP_VERSION = _read_version_file(VERSION_FILE)
 
-if not path and not clash_path:
-    raise RuntimeError("Both URL and CLASH_URL are empty. Configure at least one endpoint path.")
+if not SUB_PATH and not CLASH_PATH:
+    raise RuntimeError(
+        "All endpoints are empty. Configure at least one endpoint path."
+    )

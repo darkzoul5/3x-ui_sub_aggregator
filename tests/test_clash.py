@@ -56,8 +56,8 @@ sys.modules.setdefault("logger_setup", logger_setup_stub)
 
 
 settings_stub = types.ModuleType("settings")
-settings_stub.clash_path = "clash"
-settings_stub.path = "sub"
+settings_stub.CLASH_PATH = "clash"
+settings_stub.SUB_PATH = "sub"
 sys.modules.setdefault("settings", settings_stub)
 
 
@@ -73,6 +73,7 @@ if str(APP_DIR) not in sys.path:
 
 
 import clash  # noqa: E402
+import clash_from_vless  # noqa: E402
 
 
 class DummyAsyncClient:
@@ -148,3 +149,35 @@ class ClashGroupTests(IsolatedAsyncioTestCase):
         self.assertEqual(result["proxy-groups"][2]["type"], "fallback")
         self.assertEqual(result["proxy-groups"][1]["proxies"], ["sweden 1", "sweden 2", "sweden 443"])
         self.assertEqual(result["proxy-groups"][2]["proxies"], ["latvia 1"])
+
+
+class ClashFromVlessTests(IsolatedAsyncioTestCase):
+    def test_parse_vless_line(self):
+        proxy = clash_from_vless._parse_vless_line(
+            "vless://12345678-1234-1234-1234-123456789abc@example.com:443?type=ws&security=tls&path=%2Fws&host=example.com&sni=example.com#sweden%201"
+        )
+
+        self.assertIsNotNone(proxy)
+        self.assertEqual(proxy["name"], "sweden 1")
+        self.assertEqual(proxy["type"], "vless")
+        self.assertEqual(proxy["server"], "example.com")
+        self.assertEqual(proxy["port"], 443)
+        self.assertEqual(proxy["network"], "ws")
+        self.assertEqual(proxy["tls"], True)
+        self.assertEqual(proxy["ws-opts"]["path"], "/ws")
+        self.assertEqual(proxy["ws-opts"]["headers"]["Host"], "example.com")
+
+    async def test_merge_vless_to_clash(self):
+        async def fake_merge_all(server_urls, sub_id):
+            return (
+                "vless://12345678-1234-1234-1234-123456789abc@example.com:443?type=ws&security=tls&path=%2Fws&host=example.com&sni=example.com#sweden%201\n"
+                "vless://12345678-1234-1234-1234-123456789abd@example.com:443?type=ws&security=tls&path=%2Fws&host=example.com&sni=example.com#sweden%202\n"
+            ).encode("utf-8")
+
+        with patch.object(clash_from_vless, "merge_all", side_effect=fake_merge_all):
+            result = await clash_from_vless.merge_vless_to_clash(["https://panel"], "user")
+
+        self.assertEqual([proxy["name"] for proxy in result["proxies"]], ["sweden 1", "sweden 2"])
+        self.assertEqual(result["proxy-groups"][0]["type"], "select")
+        self.assertEqual(result["proxy-groups"][1]["type"], "fallback")
+        self.assertEqual(result["proxy-groups"][1]["name"], "sweden")

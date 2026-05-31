@@ -11,15 +11,15 @@ import yaml
 from fastapi import HTTPException
 
 from logger_setup import logger
-from settings import clash_path
+from settings import CLASH_PATH
 from shared import _load_yaml_file, _resolve_config_file
 
 
 def _build_clash_url(server_url: str, sub_id: str) -> str:
     """Build full Clash subscription URL from server base URL and sub_id."""
-    if not clash_path:
+    if not CLASH_PATH:
         raise HTTPException(status_code=500, detail="Clash endpoint is disabled")
-    full_url = f"{server_url}/{clash_path}/{sub_id}"
+    full_url = f"{server_url}/{CLASH_PATH}/{sub_id}"
     logger.info(f"Built Clash URL: {full_url}")
     return full_url
 
@@ -171,6 +171,31 @@ def _generate_proxy_groups(proxies: list[dict[str, Any]]) -> list[dict[str, Any]
     return [root_group, *generated_groups]
 
 
+def build_clash_document(
+    proxies: list[dict[str, Any]],
+    sub_id: str,
+) -> dict[str, Any]:
+    if not proxies:
+        logger.error("No clash proxies available")
+        raise HTTPException(status_code=500, detail="There are no clash proxies to return")
+
+    manual_groups = _load_proxy_groups(sub_id)
+    if manual_groups is not None:
+        groups = manual_groups
+        logger.info(f"Using manual proxy groups from config for sub_id={sub_id!r}")
+    else:
+        groups = _generate_proxy_groups(proxies)
+        logger.info(f"Auto-generated {len(groups)} proxy groups from {len(proxies)} proxies")
+
+    rules = _load_rules(sub_id)
+
+    return {
+        'proxies': proxies,
+        'proxy-groups': groups,
+        'rules': rules,
+    }
+
+
 def _parse_yaml_payload(payload: str) -> dict[str, Any] | None:
     if not payload:
         return None
@@ -246,22 +271,4 @@ async def merge_clash(server_urls: list[str], sub_id: str) -> dict[str, Any]:
 
     proxies = _strip_email_from_names(proxies)
     proxies = _deduplicate_proxy_names(proxies)
-    if not proxies:
-        logger.error("No clash proxies available")
-        raise HTTPException(status_code=500, detail="There are no clash proxies to return")
-
-    manual_groups = _load_proxy_groups(sub_id)
-    if manual_groups is not None:
-        groups = manual_groups
-        logger.info(f"Using manual proxy groups from config for sub_id={sub_id!r}")
-    else:
-        groups = _generate_proxy_groups(proxies)
-        logger.info(f"Auto-generated {len(groups)} proxy groups from {len(proxies)} proxies")
-
-    rules = _load_rules(sub_id)
-
-    return {
-        'proxies': proxies,
-        'proxy-groups': groups,
-        'rules': rules,
-    }
+    return build_clash_document(proxies, sub_id)
