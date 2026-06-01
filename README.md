@@ -1,8 +1,8 @@
 # 3x-ui_sub_aggregator
 
 <p align="center">
-   <a href="https://github.com/darkzoul5/3x-ui_config_aggregator/blob/main/README.md"><b>ENG</b></a> |
-   <a href="https://github.com/darkzoul5/3x-ui_config_aggregator/blob/main/README.ru.md"><b>RUS</b></a>
+   <a href="https://github.com/darkzoul5/3x-ui_sub_aggregator/blob/main/README.md"><b>ENG</b></a> |
+   <a href="https://github.com/darkzoul5/3x-ui_sub_aggregator/blob/main/README.ru.md"><b>RUS</b></a>
 </p>
 
 Merge multiple 3x-ui subscriptions into a single URL.
@@ -47,7 +47,7 @@ For both Clash outputs, it also:
 - merges all proxies,
 - removes trailing email-style identifiers from proxy names,
 - deduplicates proxy names,
-- automatically groups proxies by common server-name prefixes when no manual group file is present,
+- automatically groups proxies by the first token of the cleaned proxy name when no manual group file is present,
 - uses manual proxy-group files as a full override when they exist,
 - applies rules from template files.
 
@@ -114,7 +114,7 @@ Examples (with `SUB_PATH=sub` and `CLASH_PATH=clash`):
 - `http://localhost:8000/health`
 
 If `SUB_PATH` is empty, VLESS aggregation and VLESS-to-Clash conversion endpoints are not created.
-If `CLASH_PATH` is empty, the native Clash endpoint is not creared.
+If `CLASH_PATH` is empty, the native Clash endpoint is not created.
 
 ## URL setup explained
 
@@ -217,7 +217,7 @@ Proxy group behavior for Clash outputs:
 - Otherwise, the app auto-generates groups from the returned Clash proxies.
 - If `proxy-groups-{sub_id}.yaml` does not exist, `default-proxy-groups.yaml` is used if present.
 
-Auto generation groups proxies by normalized server name. For example:
+Auto generation groups proxies by the first token of the cleaned proxy name. For example:
 
 - `sweden 1`
 - `sweden 2`
