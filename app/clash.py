@@ -15,6 +15,20 @@ from settings import CLASH_PATH
 from shared import _load_yaml_file, _resolve_config_file
 
 
+_KNOWN_GROUP_SUFFIXES = {
+    'raw',
+    'xhttp',
+    'http',
+    'https',
+    'ws',
+    'grpc',
+    'h2',
+    'h3',
+    'tcp',
+    'tls',
+}
+
+
 def _build_clash_url(server_url: str, sub_id: str) -> str:
     """Build full Clash subscription URL from server base URL and sub_id."""
     if not CLASH_PATH:
@@ -66,8 +80,12 @@ def _load_rules(sub_id: str) -> list[str]:
 
 def _strip_email_from_names(proxies: list[dict[str, Any]]) -> list[dict[str, Any]]:
     """
-    Strip email suffix from proxy names.
-    Pattern: inbound-email -> inbound
+    Normalize transport-like suffixes from proxy names.
+
+    Examples:
+    - LV-RAW -> LV
+    - SW1-RAW-443 -> SW1
+    - Sweden 2 -> Sweden 2
     """
     stripped = []
     for proxy in proxies:
@@ -75,10 +93,20 @@ def _strip_email_from_names(proxies: list[dict[str, Any]]) -> list[dict[str, Any
             continue
         current = dict(proxy)
         name = current.get('name')
-        if isinstance(name, str) and '-' in name:
-            clean_name = name.split('-', 1)[0].strip()
-            if clean_name:
-                current['name'] = clean_name
+        if isinstance(name, str):
+            clean_name = re.sub(r'(?:_\d+)+$', '', name.strip())
+            parts = re.split(r'\s*-\s*', clean_name)
+
+            while len(parts) > 1:
+                tail = parts[-1].strip()
+                if tail.isdigit() or tail.casefold() in _KNOWN_GROUP_SUFFIXES:
+                    parts.pop()
+                    continue
+                break
+
+            normalized = '-'.join(part.strip() for part in parts if part.strip()).strip()
+            if normalized:
+                current['name'] = normalized
         stripped.append(current)
     return stripped
 
@@ -116,18 +144,12 @@ def _normalize_proxy_group_name(name: str) -> str:
     Derive a common base name for a proxy group.
 
     Examples:
-    - sweden 1 -> sweden
-    - sweden-443 -> sweden
-    - latvia 1 -> latvia
+    - LV-RAW -> LV
+    - SW1-RAW-443 -> SW1
+    - Sweden 2 -> Sweden 2
     """
     normalized = re.sub(r'\s+', ' ', name).strip()
-
-    while True:
-        stripped = re.sub(r'(?:[ _.-]*\d+)+$', '', normalized).strip(' ._-')
-        if not stripped or stripped == normalized:
-            break
-        normalized = stripped
-
+    normalized = re.sub(r'(?:_\d+)+$', '', normalized).strip()
     return normalized or name.strip()
 
 
