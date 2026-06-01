@@ -15,26 +15,10 @@ from settings import CLASH_PATH
 from shared import _load_yaml_file, _resolve_config_file
 
 
-_KNOWN_GROUP_SUFFIXES = {
-    'raw',
-    'xhttp',
-    'http',
-    'https',
-    'ws',
-    'grpc',
-    'h2',
-    'h3',
-    'tcp',
-    'tls',
-}
-
-
 def _looks_like_user_suffix(segment: str) -> bool:
     """Heuristic for trailing user/email labels appended by the panel."""
     cleaned = segment.strip()
     if not cleaned:
-        return False
-    if cleaned.casefold() in _KNOWN_GROUP_SUFFIXES or cleaned.isdigit():
         return False
     return '_' in cleaned or '@' in cleaned
 
@@ -90,12 +74,12 @@ def _load_rules(sub_id: str) -> list[str]:
 
 def _strip_email_from_names(proxies: list[dict[str, Any]]) -> list[dict[str, Any]]:
     """
-    Normalize panel-appended user labels and transport-like suffixes from proxy names.
+    Normalize panel-appended user labels from proxy names.
 
     Examples:
-    - LV-RAW-dark_zoul -> LV
-    - SW1-RAW-443-dark_zoul -> SW1
-    - Sweden 2 -> Sweden 2
+    - LV-RAW-dark_zoul -> LV-RAW
+    - SW1-RAW-443-dark_zoul -> SW1-RAW-443
+    - Sweden 2-1-dark_zoul -> Sweden 2-1
     """
     stripped = []
     for proxy in proxies:
@@ -109,20 +93,8 @@ def _strip_email_from_names(proxies: list[dict[str, Any]]) -> list[dict[str, Any
                 prefix, suffix = clean_name.rsplit('-', 1)
                 if _looks_like_user_suffix(suffix):
                     clean_name = prefix
-
-            clean_name = re.sub(r'(?:_\d+)+$', '', clean_name)
-            parts = re.split(r'\s*-\s*', clean_name)
-
-            while len(parts) > 1:
-                tail = parts[-1].strip()
-                if tail.isdigit() or tail.casefold() in _KNOWN_GROUP_SUFFIXES:
-                    parts.pop()
-                    continue
-                break
-
-            normalized = '-'.join(part.strip() for part in parts if part.strip()).strip()
-            if normalized:
-                current['name'] = normalized
+            if clean_name:
+                current['name'] = clean_name
         stripped.append(current)
     return stripped
 
@@ -157,16 +129,18 @@ def _deduplicate_proxy_names(proxies: list[dict[str, Any]]) -> list[dict[str, An
 
 def _normalize_proxy_group_name(name: str) -> str:
     """
-    Derive a common base name for a proxy group.
+    Derive the group name from the first token in the proxy name.
 
     Examples:
     - LV-RAW -> LV
     - SW1-RAW-443 -> SW1
-    - Sweden 2 -> Sweden 2
+    - Sweden 2-1 -> Sweden
     """
-    normalized = re.sub(r'\s+', ' ', name).strip()
-    normalized = re.sub(r'(?:_\d+)+$', '', normalized).strip()
-    return normalized or name.strip()
+    normalized = name.strip()
+    if not normalized:
+        return name.strip()
+    first_token = re.split(r'[\s\-_]+', normalized, maxsplit=1)[0].strip()
+    return first_token or normalized
 
 
 def _generate_proxy_groups(proxies: list[dict[str, Any]]) -> list[dict[str, Any]]:
@@ -193,6 +167,7 @@ def _generate_proxy_groups(proxies: list[dict[str, Any]]) -> list[dict[str, Any]
         grouped[group_key]['proxies'].append(name)
 
     generated_groups = list(grouped.values())
+
     if not generated_groups:
         return []
 
