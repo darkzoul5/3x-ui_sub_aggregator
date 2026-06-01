@@ -1,20 +1,21 @@
 # 3x-ui_sub_aggregator
 
 <p align="center">
-   <a href="https://github.com/darkzoul5/xray_config_aggregator/blob/main/README.md"><b>ENG</b></a> |
-   <a href="https://github.com/darkzoul5/xray_config_aggregator/blob/main/README.ru.md"><b>RUS</b></a>
+   <a href="https://github.com/darkzoul5/3x-ui_config_aggregator/blob/main/README.md"><b>ENG</b></a> |
+   <a href="https://github.com/darkzoul5/3x-ui_config_aggregator/blob/main/README.ru.md"><b>RUS</b></a>
 </p>
 
-Aggregate multiple 3x-ui subscriptions into a single endpoint.
+Merge multiple 3x-ui subscriptions into a single URL.
 
 > [!NOTE]
-> This was made for 3x-ui before v2.9.0. This may not be as useful in later versions
+> Originally created for older 3x-ui versions before v2.9.0 that did not support clash subscriptions or multi-node subscription aggregation natively.
+> Newer versions may reduce the need for this project depending on your setup.
 
 Supported output formats:
 
 - VLESS/base64 subscription
-- Clash/Mihomo YAML conversion from VLESS subscriptions
-- Clash/Mihomo YAML subscription
+- Clash/Mihomo YAML generated from VLESS subscriptions
+- Native Clash/Mihomo YAML subscription
 
 ## Contents
 
@@ -44,9 +45,9 @@ Supported output formats:
 For both Clash outputs, it also:
 
 - merges all proxies,
-- strips email-like suffix from proxy names,
+- removes trailing email-style identifiers from proxy names,
 - deduplicates proxy names,
-- auto-generates proxy groups from common server-name prefixes when no manual group file is present,
+- automatically groups proxies by common server-name prefixes when no manual group file is present,
 - uses manual proxy-group files as a full override when they exist,
 - applies rules from template files.
 
@@ -62,27 +63,26 @@ To aggregate subscriptions correctly, all source panels should use the same subs
 1. Clone the repository:
 
 ```bash
-git clone https://github.com/darkzoul5/xray_config_aggregator.git
+git clone https://github.com/darkzoul5/3x-ui_config_aggregator.git
 cd xray_config_aggregator
 ```
 
-1. Prepare local config directory and source list:
+2. Prepare local config directory and source list:
 
 ```bash
 mkdir -p configs
 cp config.txt.example configs/config.txt
 ```
 
-1. Edit `configs/config.txt` and put one source URL per line:
+3. Edit `configs/config.txt` and put one source URL per line:
 
 ```txt
 https://panel-1.example.com
 https://panel-2.example.com:8443
 ```
 
-1. Configure environment in `docker-compose.yml` (or your own `.env` file).
-
-2. Start service:
+4. Configure environment in `docker-compose.yml` (or your own `.env` file).
+5. Start service:
 
 ```bash
 docker compose up -d
@@ -113,8 +113,8 @@ Examples (with `SUB_PATH=sub` and `CLASH_PATH=clash`):
 - `http://localhost:8000/clash/my_sub_id`
 - `http://localhost:8000/health`
 
-If `SUB_PATH` is empty, both VLESS aggregation and VLESS-to-Clash conversion are disabled.
-If `CLASH_PATH` is empty, the native Clash endpoint is disabled.
+If `SUB_PATH` is empty, VLESS aggregation and VLESS-to-Clash conversion endpoints are not created.
+If `CLASH_PATH` is empty, the native Clash endpoint is not creared.
 
 ## URL setup explained
 
