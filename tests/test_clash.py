@@ -94,13 +94,13 @@ class ClashGroupTests(IsolatedAsyncioTestCase):
 
     def test_generate_proxy_groups(self):
         raw_proxies = [
-            {"name": "LV-RAW"},
-            {"name": "LV-XHTTP"},
-            {"name": "SW1-RAW"},
-            {"name": "SW1-RAW-443"},
-            {"name": "SW1-XHTTP"},
-            {"name": "Sweden 2"},
-            {"name": "Sweden 2_2"},
+            {"name": "LV-RAW-dark_zoul"},
+            {"name": "LV-XHTTP-dark_zoul"},
+            {"name": "SW1-RAW-dark_zoul"},
+            {"name": "SW1-RAW-443-dark_zoul"},
+            {"name": "SW1-XHTTP-dark_zoul"},
+            {"name": "Sweden 2-1-dark_zoul"},
+            {"name": "Sweden 2-2-dark_zoul"},
         ]
 
         proxies = clash._deduplicate_proxy_names(clash._strip_email_from_names(raw_proxies))

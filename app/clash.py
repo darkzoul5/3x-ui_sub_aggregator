@@ -29,6 +29,16 @@ _KNOWN_GROUP_SUFFIXES = {
 }
 
 
+def _looks_like_user_suffix(segment: str) -> bool:
+    """Heuristic for trailing user/email labels appended by the panel."""
+    cleaned = segment.strip()
+    if not cleaned:
+        return False
+    if cleaned.casefold() in _KNOWN_GROUP_SUFFIXES or cleaned.isdigit():
+        return False
+    return '_' in cleaned or '@' in cleaned
+
+
 def _build_clash_url(server_url: str, sub_id: str) -> str:
     """Build full Clash subscription URL from server base URL and sub_id."""
     if not CLASH_PATH:
@@ -80,11 +90,11 @@ def _load_rules(sub_id: str) -> list[str]:
 
 def _strip_email_from_names(proxies: list[dict[str, Any]]) -> list[dict[str, Any]]:
     """
-    Normalize transport-like suffixes from proxy names.
+    Normalize panel-appended user labels and transport-like suffixes from proxy names.
 
     Examples:
-    - LV-RAW -> LV
-    - SW1-RAW-443 -> SW1
+    - LV-RAW-dark_zoul -> LV
+    - SW1-RAW-443-dark_zoul -> SW1
     - Sweden 2 -> Sweden 2
     """
     stripped = []
@@ -94,7 +104,13 @@ def _strip_email_from_names(proxies: list[dict[str, Any]]) -> list[dict[str, Any
         current = dict(proxy)
         name = current.get('name')
         if isinstance(name, str):
-            clean_name = re.sub(r'(?:_\d+)+$', '', name.strip())
+            clean_name = name.strip()
+            if '-' in clean_name:
+                prefix, suffix = clean_name.rsplit('-', 1)
+                if _looks_like_user_suffix(suffix):
+                    clean_name = prefix
+
+            clean_name = re.sub(r'(?:_\d+)+$', '', clean_name)
             parts = re.split(r'\s*-\s*', clean_name)
 
             while len(parts) > 1:
