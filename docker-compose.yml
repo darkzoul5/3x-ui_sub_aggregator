@@ -3,17 +3,13 @@ services:
     ports:
       - "8000:8000"
     environment:
-      - LOCAL_MODE=on/off
+      - LOCAL_MODE=on  #on or off
       - CONFIG_DIR=/app/configs
-      - CONFIG_URL=https://api.github.com/.../file.txt
+      - CONFIG_URL=https://github.com/.../file.txt
       - GITHUB_TOKEN=${GITHUB_TOKEN}
       - SUB_PATH=/sub
       - CLASH_PATH=/clash
-      #- LOG_LEVEL=info
+      - LOG_LEVEL=info
     volumes:
       - /path/to/configs:/app/configs
     restart: unless-stopped
-
-networks:
-  default:
-    driver: bridge
