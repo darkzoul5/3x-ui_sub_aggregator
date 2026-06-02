@@ -108,6 +108,10 @@ class ClashGroupTests(IsolatedAsyncioTestCase):
         proxies = clash._deduplicate_proxy_names(clash._strip_email_from_names(raw_proxies))
         groups = clash._generate_proxy_groups(proxies)
 
+        print("Generated groups:")
+        for group in groups:
+            print(f"- {group['name']}: {group.get('proxies', [])}")
+
         self.assertEqual(groups[0]["name"], "Proxy")
         self.assertEqual(groups[0]["proxies"], ["LV", "SW", "Sweden", "DIRECT"])
 

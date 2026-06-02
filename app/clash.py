@@ -15,9 +15,30 @@ from settings import CLASH_PATH
 from shared import _load_yaml_file, _resolve_config_file
 
 
+_KNOWN_TRANSPORT_SUFFIXES = {
+    'raw',
+    'xhttp',
+    'http',
+    'https',
+    'ws',
+    'grpc',
+    'h2',
+    'h3',
+    'tcp',
+    'tls',
+}
+
+
 def _looks_like_user_suffix(segment: str) -> bool:
     """3x-ui appends the user's email/value as the last name segment."""
-    return bool(segment.strip())
+    cleaned = segment.strip()
+    if not cleaned:
+        return False
+    if cleaned.isdigit():
+        return False
+    if cleaned.casefold() in _KNOWN_TRANSPORT_SUFFIXES:
+        return False
+    return True
 
 
 def _build_clash_url(server_url: str, sub_id: str) -> str:
