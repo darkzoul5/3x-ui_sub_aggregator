@@ -126,18 +126,18 @@ def _deduplicate_proxy_names(proxies: list[dict[str, Any]]) -> list[dict[str, An
 
 def _normalize_proxy_group_name(name: str) -> str:
     """
-    Derive the group name from the first token in the proxy name.
+    Derive the group name from the first word/token in the cleaned proxy name.
 
     Examples:
     - LV-RAW -> LV
-    - SW1-RAW-443 -> SW1
+    - SW-1-RAW-443 -> SW
     - Sweden 2-1 -> Sweden
     """
     normalized = name.strip()
     if not normalized:
         return name.strip()
-    first_token = re.split(r'[\s\-_]+', normalized, maxsplit=1)[0].strip()
-    return first_token or normalized
+    first_word = re.split(r'[\s\-_]+', normalized, maxsplit=1)[0].strip()
+    return first_word or normalized
 
 
 def _generate_proxy_groups(proxies: list[dict[str, Any]]) -> list[dict[str, Any]]:
@@ -168,12 +168,8 @@ def _generate_proxy_groups(proxies: list[dict[str, Any]]) -> list[dict[str, Any]
     if not generated_groups:
         return []
 
-    root_group_name = 'Proxy'
-    if any(group['name'].casefold() == root_group_name.casefold() for group in generated_groups):
-        root_group_name = 'Auto'
-
     root_group = {
-        'name': root_group_name,
+        'name': 'Proxy',
         'type': 'select',
         'proxies': [group['name'] for group in generated_groups] + ['DIRECT'],
     }
