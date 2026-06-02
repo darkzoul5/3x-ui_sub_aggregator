@@ -122,7 +122,7 @@ jobs:
             echo ""
             echo "## Release Stats"
             echo ""
-            echo "![Image downloads](https://img.shields.io/badge/image%20downloads-${DOWNLOAD_COUNT}-blue?style=flat-square)"
+            echo "![Image downloads](echo "![GHCR downloads](https://img.shields.io/badge/GHCR%20downloads-${DOWNLOAD_COUNT}-blue?style=flat-square&logo=github)")"
             echo ""
             echo "## ${CHANGE_TITLE}"
             echo ""
