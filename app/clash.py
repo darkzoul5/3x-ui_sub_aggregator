@@ -16,11 +16,8 @@ from shared import _load_yaml_file, _resolve_config_file
 
 
 def _looks_like_user_suffix(segment: str) -> bool:
-    """Heuristic for trailing user/email labels appended by the panel."""
-    cleaned = segment.strip()
-    if not cleaned:
-        return False
-    return '_' in cleaned or '@' in cleaned
+    """3x-ui appends the user's email/value as the last name segment."""
+    return bool(segment.strip())
 
 
 def _build_clash_url(server_url: str, sub_id: str) -> str:

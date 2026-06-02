@@ -94,13 +94,13 @@ class ClashGroupTests(IsolatedAsyncioTestCase):
 
     def test_generate_proxy_groups(self):
         raw_proxies = [
-            {"name": "LV-RAW-dark_zoul"},
-            {"name": "LV-XHTTP-dark_zoul"},
-            {"name": "SW1-RAW-dark_zoul"},
-            {"name": "SW1-RAW-443-dark_zoul"},
-            {"name": "SW1-XHTTP-dark_zoul"},
-            {"name": "Sweden 2-1-dark_zoul"},
-            {"name": "Sweden 2-2-dark_zoul"},
+            {"name": "LV-RAW-FIREGSG"},
+            {"name": "LV-XHTTP-Tavoa"},
+            {"name": "SW1-RAW-SalvNova"},
+            {"name": "SW1-RAW-443-FIREGSG"},
+            {"name": "SW1-XHTTP-Tavoa"},
+            {"name": "Sweden 2-1-SalvNova"},
+            {"name": "Sweden 2-2-FIREGSG"},
         ]
 
         proxies = clash._deduplicate_proxy_names(clash._strip_email_from_names(raw_proxies))
@@ -138,13 +138,13 @@ class ClashGroupTests(IsolatedAsyncioTestCase):
     async def test_merge_clash_auto_generates_groups_when_manual_missing(self):
         async def fake_fetch_clash_subscription(client, clash_url):
             if clash_url.startswith("https://one/"):
-                return [{"name": "LV-RAW-dark_zoul"}, {"name": "SW1-RAW-dark_zoul"}]
+                return [{"name": "LV-RAW-FIREGSG"}, {"name": "SW1-RAW-SalvNova"}]
             return [
-                {"name": "LV-XHTTP-dark_zoul"},
-                {"name": "SW1-RAW-443-dark_zoul"},
-                {"name": "SW1-XHTTP-dark_zoul"},
-                {"name": "Sweden 2-1-dark_zoul"},
-                {"name": "Sweden 2-2-dark_zoul"},
+                {"name": "LV-XHTTP-Tavoa"},
+                {"name": "SW1-RAW-443-FIREGSG"},
+                {"name": "SW1-XHTTP-Tavoa"},
+                {"name": "Sweden 2-1-SalvNova"},
+                {"name": "Sweden 2-2-FIREGSG"},
             ]
 
         with (
