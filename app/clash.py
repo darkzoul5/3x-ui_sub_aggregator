@@ -191,7 +191,7 @@ def _generate_proxy_groups(proxies: list[dict[str, Any]]) -> list[dict[str, Any]
 
     root_group = {
         'name': 'Proxy',
-        'type': 'select',
+        'type': 'fallback',
         'proxies': [group['name'] for group in generated_groups] + ['DIRECT'],
     }
 
