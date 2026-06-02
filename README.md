@@ -1,5 +1,7 @@
 # 3x-ui_sub_aggregator
 
+![Docker Pulls](https://ghcr-badge.elias.eu.org/shield/darkzoul5/3x-ui_sub_aggregator)
+
 <p align="center">
    <a href="https://github.com/darkzoul5/3x-ui_sub_aggregator/blob/main/README.md"><b>ENG</b></a> |
    <a href="https://github.com/darkzoul5/3x-ui_sub_aggregator/blob/main/README.ru.md"><b>RUS</b></a>

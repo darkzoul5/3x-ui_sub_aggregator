@@ -104,25 +104,12 @@ jobs:
             SCOPE="orgs"
           fi
 
-          DOWNLOAD_COUNT="unknown"
-          PACKAGE_VERSION_ID="$(gh api "/${SCOPE}/${OWNER}/packages/container/${PACKAGE_NAME}/versions?per_page=100" --jq ".[] | select(.metadata.container.tags[]? == \"${IMAGE_VERSION}\") | .id" | head -n 1 || true)"
-          if [ -n "$PACKAGE_VERSION_ID" ]; then
-            DOWNLOAD_COUNT="$(gh api "/${SCOPE}/${OWNER}/packages/container/${PACKAGE_NAME}/versions/${PACKAGE_VERSION_ID}" --jq '.download_count // .metadata.download_count // empty' || true)"
-            if [ -z "$DOWNLOAD_COUNT" ]; then
-              DOWNLOAD_COUNT="unknown"
-            fi
-          fi
-
           {
             echo "## Docker Images"
             echo ""
             echo "\`${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.version.outputs.version }}\`"
             echo "\`${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest\`"
             echo "\`${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:dev\` latest commit image for testing"
-            echo ""
-            echo "## Release Stats"
-            echo ""
-            echo "![Image downloads](https://img.shields.io/badge/image%20downloads-${DOWNLOAD_COUNT}-blue?style=flat-square)"
             echo ""
             echo "## ${CHANGE_TITLE}"
             echo ""
