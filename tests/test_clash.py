@@ -1,4 +1,5 @@
 import logging
+import tempfile
 import sys
 import types
 from pathlib import Path
@@ -85,6 +86,25 @@ class DummyAsyncClient:
 
 
 class ClashGroupTests(IsolatedAsyncioTestCase):
+    def test_load_rules_supports_plain_lines(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            rules_path = Path(temp_dir) / "rules-user.yaml"
+            rules_path.write_text(
+                "# comment\n\nDOMAIN-SUFFIX,discord.com,PROXY\nDOMAIN-SUFFIX,discord.gg,PROXY\n",
+                encoding="utf-8",
+            )
+
+            with patch.object(clash, "_resolve_config_file", return_value=str(rules_path)):
+                rules = clash._load_rules("user")
+
+        self.assertEqual(
+            rules,
+            [
+                "DOMAIN-SUFFIX,discord.com,PROXY",
+                "DOMAIN-SUFFIX,discord.gg,PROXY",
+            ],
+        )
+
     def test_normalize_proxy_group_name(self):
         self.assertEqual(clash._normalize_proxy_group_name("LV-RAW"), "LV")
         self.assertEqual(clash._normalize_proxy_group_name("SW-1-RAW-443"), "SW")

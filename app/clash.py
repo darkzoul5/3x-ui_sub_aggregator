@@ -80,6 +80,18 @@ def _load_rules(sub_id: str) -> list[str]:
         logger.warning(f"Rules config file is missing: {file_path}")
         return []
 
+    with open(file_path, encoding='utf-8') as file:
+        raw_content = file.read()
+
+    plain_rules = [
+        line.strip()
+        for line in raw_content.splitlines()
+        if line.strip() and not line.lstrip().startswith('#')
+    ]
+    if plain_rules and not plain_rules[0].startswith(('rules:', '- ')):
+        logger.info(f"Loaded {len(plain_rules)} plain-text rules from {file_path}")
+        return plain_rules
+
     data = _load_yaml_file(file_path)
     rules = data.get('rules', data) if isinstance(data, (dict, list)) else []
     if not isinstance(rules, list):
