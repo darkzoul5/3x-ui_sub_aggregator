@@ -112,7 +112,7 @@ class ClashGroupTests(IsolatedAsyncioTestCase):
         for group in groups:
             print(f"- {group['name']}: {group.get('proxies', [])}")
 
-        self.assertEqual(groups[0]["name"], "Proxy")
+        self.assertEqual(groups[0]["name"], "PROXY")
         self.assertEqual(groups[0]["proxies"], ["LV", "SW", "Sweden", "DIRECT"])
 
         by_name = {group["name"]: group for group in groups[1:]}
@@ -164,7 +164,7 @@ class ClashGroupTests(IsolatedAsyncioTestCase):
             result = await clash.merge_clash(["https://one", "https://two"], "user")
 
         group_names = [group["name"] for group in result["proxy-groups"]]
-        self.assertEqual(group_names, ["Proxy", "LV", "SW", "Sweden"])
+        self.assertEqual(group_names, ["PROXY", "LV", "SW", "Sweden"])
         self.assertEqual(result["proxy-groups"][0]["type"], "select")
         self.assertEqual(result["proxy-groups"][1]["type"], "fallback")
         self.assertEqual(result["proxy-groups"][2]["type"], "fallback")
