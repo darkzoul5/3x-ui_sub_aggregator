@@ -105,12 +105,6 @@ jobs:
           fi
 
           {
-            echo "## Docker Images"
-            echo ""
-            echo "\`${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.version.outputs.version }}\`"
-            echo "\`${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest\`"
-            echo "\`${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:dev\` latest commit image for testing"
-            echo ""
             echo "## ${CHANGE_TITLE}"
             echo ""
             echo "${COMMITS}"
@@ -121,6 +115,13 @@ jobs:
             echo "2. Run: \`docker compose up -d\`"
             echo ""
             echo "See README.md for detailed setup instructions."
+            echo ""
+            echo "## Docker Images"
+            echo ""
+            echo "\`${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.version.outputs.version }}\`"
+            echo "\`${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest\`"
+            echo "\`${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:dev\` latest commit image for testing"
+
           } > RELEASE_NOTES.md
 
       - name: Create Release
