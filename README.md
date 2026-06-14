@@ -47,7 +47,6 @@ Supported output formats:
 For both Clash outputs, it also:
 
 - merges all proxies,
-- removes trailing email suffix from proxy names,
 - deduplicates proxy names,
 - automatically groups proxies by the first token of the cleaned proxy name when no manual group file is present,
 - uses manual proxy-group files as a full override when they exist,
