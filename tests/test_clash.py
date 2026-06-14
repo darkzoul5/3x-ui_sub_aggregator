@@ -114,18 +114,18 @@ class ClashGroupTests(IsolatedAsyncioTestCase):
 
     def test_generate_proxy_groups(self):
         raw_proxies = [
-            {"name": "LV-RAW-FIREGSG"},
-            {"name": "LV-XHTTP-Tavoa"},
-            {"name": "SW-1-RAW-SalvNova"},
-            {"name": "SW-1-RAW-443-FIREGSG"},
-            {"name": "SW-1-XHTTP-Tavoa"},
-            {"name": "SW-2-RAW-SalvNova"},
-            {"name": "SW-2-XHTTP-FIREGSG"},
-            {"name": "Sweden 2-1-SalvNova"},
-            {"name": "Sweden 2-2-FIREGSG"},
+            {"name": "LV-RAW"},
+            {"name": "LV-XHTTP"},
+            {"name": "SW-1-RAW"},
+            {"name": "SW-1-RAW-443"},
+            {"name": "SW-1-XHTTP"},
+            {"name": "SW-2-RAW"},
+            {"name": "SW-2-XHTTP"},
+            {"name": "Sweden 2-1"},
+            {"name": "Sweden 2-2"},
         ]
 
-        proxies = clash._deduplicate_proxy_names(clash._strip_email_from_names(raw_proxies))
+        proxies = clash._deduplicate_proxy_names(raw_proxies)
         groups = clash._generate_proxy_groups(proxies)
 
         print("Generated groups:")
@@ -133,7 +133,7 @@ class ClashGroupTests(IsolatedAsyncioTestCase):
             print(f"- {group['name']}: {group.get('proxies', [])}")
 
         self.assertEqual(groups[0]["name"], "PROXY")
-        self.assertEqual(groups[0]["proxies"], ["LV", "SW", "Sweden", "DIRECT"])
+        self.assertEqual(groups[0]["proxies"], ["LV", "SW", "Sweden"])
 
         by_name = {group["name"]: group for group in groups[1:]}
         self.assertEqual(by_name["LV"]["type"], "fallback")
@@ -164,15 +164,15 @@ class ClashGroupTests(IsolatedAsyncioTestCase):
     async def test_merge_clash_auto_generates_groups_when_manual_missing(self):
         async def fake_fetch_clash_subscription(client, clash_url):
             if clash_url.startswith("https://one/"):
-                return [{"name": "LV-RAW-FIREGSG"}, {"name": "SW-1-RAW-SalvNova"}]
+                return [{"name": "LV-RAW"}, {"name": "SW-1-RAW"}]
             return [
-                {"name": "LV-XHTTP-Tavoa"},
-                {"name": "SW-1-RAW-443-FIREGSG"},
-                {"name": "SW-1-XHTTP-Tavoa"},
-                {"name": "SW-2-RAW-SalvNova"},
-                {"name": "SW-2-XHTTP-FIREGSG"},
-                {"name": "Sweden 2-1-SalvNova"},
-                {"name": "Sweden 2-2-FIREGSG"},
+                {"name": "LV-XHTTP"},
+                {"name": "SW-1-RAW-443"},
+                {"name": "SW-1-XHTTP"},
+                {"name": "SW-2-RAW"},
+                {"name": "SW-2-XHTTP"},
+                {"name": "Sweden 2-1"},
+                {"name": "Sweden 2-2"},
             ]
 
         with (
@@ -185,7 +185,7 @@ class ClashGroupTests(IsolatedAsyncioTestCase):
 
         group_names = [group["name"] for group in result["proxy-groups"]]
         self.assertEqual(group_names, ["PROXY", "LV", "SW", "Sweden"])
-        self.assertEqual(result["proxy-groups"][0]["type"], "select")
+        self.assertEqual(result["proxy-groups"][0]["type"], "fallback")
         self.assertEqual(result["proxy-groups"][1]["type"], "fallback")
         self.assertEqual(result["proxy-groups"][2]["type"], "fallback")
         self.assertEqual(result["proxy-groups"][3]["type"], "fallback")
@@ -221,6 +221,6 @@ class ClashFromVlessTests(IsolatedAsyncioTestCase):
             result = await clash_from_vless.merge_vless_to_clash(["https://panel"], "user")
 
         self.assertEqual([proxy["name"] for proxy in result["proxies"]], ["sweden 1", "sweden 2"])
-        self.assertEqual(result["proxy-groups"][0]["type"], "select")
+        self.assertEqual(result["proxy-groups"][0]["type"], "fallback")
         self.assertEqual(result["proxy-groups"][1]["type"], "fallback")
         self.assertEqual(result["proxy-groups"][1]["name"], "sweden")

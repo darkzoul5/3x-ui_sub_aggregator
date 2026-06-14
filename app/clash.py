@@ -15,32 +15,6 @@ from settings import CLASH_PATH
 from shared import _load_yaml_file, _resolve_config_file
 
 
-_KNOWN_TRANSPORT_SUFFIXES = {
-    'raw',
-    'xhttp',
-    'http',
-    'https',
-    'ws',
-    'grpc',
-    'h2',
-    'h3',
-    'tcp',
-    'tls',
-}
-
-
-def _looks_like_user_suffix(segment: str) -> bool:
-    """3x-ui appends the user's email/value as the last name segment."""
-    cleaned = segment.strip()
-    if not cleaned:
-        return False
-    if cleaned.isdigit():
-        return False
-    if cleaned.casefold() in _KNOWN_TRANSPORT_SUFFIXES:
-        return False
-    return True
-
-
 def _build_clash_url(server_url: str, sub_id: str) -> str:
     """Build full Clash subscription URL from server base URL and sub_id."""
     if not CLASH_PATH:
@@ -100,33 +74,6 @@ def _load_rules(sub_id: str) -> list[str]:
     result = [rule for rule in rules if isinstance(rule, str) and rule.strip()]
     logger.info(f"Loaded {len(result)} rules from {file_path}")
     return result
-
-
-def _strip_email_from_names(proxies: list[dict[str, Any]]) -> list[dict[str, Any]]:
-    """
-    Normalize panel-appended user labels from proxy names.
-
-    Examples:
-    - LV-RAW-dark_zoul -> LV-RAW
-    - SW1-RAW-443-dark_zoul -> SW1-RAW-443
-    - Sweden 2-1-dark_zoul -> Sweden 2-1
-    """
-    stripped = []
-    for proxy in proxies:
-        if not isinstance(proxy, dict):
-            continue
-        current = dict(proxy)
-        name = current.get('name')
-        if isinstance(name, str):
-            clean_name = name.strip()
-            if '-' in clean_name:
-                prefix, suffix = clean_name.rsplit('-', 1)
-                if _looks_like_user_suffix(suffix):
-                    clean_name = prefix
-            if clean_name:
-                current['name'] = clean_name
-        stripped.append(current)
-    return stripped
 
 
 def _deduplicate_proxy_names(proxies: list[dict[str, Any]]) -> list[dict[str, Any]]:
@@ -308,6 +255,5 @@ async def merge_clash(server_urls: list[str], sub_id: str) -> dict[str, Any]:
 
     logger.info(f"Clash fetch summary: sources={len(clash_urls)}, total_proxies_before_dedupe={len(proxies)}")
 
-    proxies = _strip_email_from_names(proxies)
     proxies = _deduplicate_proxy_names(proxies)
     return build_clash_document(proxies, sub_id)

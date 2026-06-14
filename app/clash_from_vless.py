@@ -2,7 +2,7 @@ from urllib.parse import parse_qs, unquote, urlparse
 
 from fastapi import HTTPException
 
-from clash import _deduplicate_proxy_names, _strip_email_from_names, build_clash_document
+from clash import _deduplicate_proxy_names, build_clash_document
 from logger_setup import logger
 from vless import merge_all
 
@@ -136,7 +136,6 @@ async def merge_vless_to_clash(server_urls: list[str], sub_id: str) -> dict:
     merged = await merge_all(server_urls, sub_id)
     payload = merged.decode("utf-8", errors="ignore")
     proxies = _parse_vless_payload(payload)
-    proxies = _strip_email_from_names(proxies)
     proxies = _deduplicate_proxy_names(proxies)
 
     if not proxies:
